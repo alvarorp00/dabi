@@ -1,0 +1,3 @@
+[submodule "fall-detector"]
+	path = fall-detector
+	url = https://github.com/jjroldangomez/fall-detector
