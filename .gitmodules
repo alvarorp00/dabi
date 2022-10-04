@@ -1,3 +1,6 @@
 [submodule "fall-detector"]
 	path = fall-detector
 	url = https://github.com/jjroldangomez/fall-detector
+[submodule "car-detector"]
+	path = car-detector
+	url = https://github.com/jjroldangomez/car-detector
