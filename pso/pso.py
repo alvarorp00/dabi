@@ -18,12 +18,11 @@ MIN_VEL, MAX_VEL = -5, 5
 def sphere(vector):
     return np.sum(np.power(vector, 2))
     
-def rastrigin(vector):
-    A = 10
+def rastrigin(vector, A=10):
     return A + np.sum(np.power(vector, 2) - A * np.cos(2*np.math.pi*vector))
 
-def rosenbrock(vector):
-    return np.math.exp(-np.sum(np.array([(100*(vector[i+1]-vector[i]**2)**2 + (1-vector[i])**2)/20 for i in range(len(vector) - 1)])))
+def rosenbrock(vector, A=100, B=20):
+    return np.math.exp(-np.sum(np.array([(A*(vector[i+1]-vector[i]**2)**2 + (1-vector[i])**2)/B for i in range(len(vector) - 1)])))
 
 target_func = lambda vector: sphere(vector)  # OBJECTIVE FUNCTION USED BY PARTICLES
 
@@ -75,6 +74,8 @@ def objective_function(position):
 
 """
 Algorithm:
+    - Searchs for global minimum of the objective function called by target_func.
+
     - Select w from Normal(1, 0.5) <- close to 1
     - Select q1, q2 (a.k.a. c1, c2) from Normal(2, 0.5) <- close to 2
 
@@ -83,8 +84,8 @@ Algorithm:
         1. For each particle
             1. Update velocity
             2. Update position
-            3. Check if current position outplays local best
-                1. If yes, check if also improves swarm_best
+            3. Check if current position improves local_best
+            1. Check if current position improves swarm_best
             4. Add velocity and position to the trace --> Not used here but for debugging is useful
 """
 def pso(particles: List[Particle]):
@@ -115,8 +116,8 @@ def pso(particles: List[Particle]):
             if candidate < objective_function(particles[j].local_best_position):
                 particles[j].local_best_position = particles[j].position
 
-                if objective_function(particles[j].local_best_position) < objective_function(swarm_best_position):
-                    swarm_best_position = particles[j].local_best_position
+            if objective_function(particles[j].local_best_position) < objective_function(swarm_best_position):
+                swarm_best_position = particles[j].local_best_position
 
             particles[j].position_trace[i] = particles[j].position
             particles[j].velocity_trace[i] = particles[j].velocity
