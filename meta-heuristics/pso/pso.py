@@ -1,10 +1,6 @@
-from tokenize import Double
 from typing import List
 import numpy as np
-import tensorflow as tf
-import tensorflow_probability as tfp
 import scipy.stats as st
-import matplotlib.pyplot as plt
 
 # Configuration of the simulation
 N_DIMS = 2
