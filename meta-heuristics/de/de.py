@@ -8,41 +8,57 @@ from typing import List, Set
 
 # Test functions --> change target_func for using each of them
 
-def sphere(vector):
+def sphere(vector):  # Sphere target function
     return np.sum(np.power(vector, 2))
     
-def rastrigin(vector, A=10):
+def rastrigin(vector, A=10):  # Rastrigin target function
     return A + np.sum(np.power(vector, 2) - A * np.cos(2*np.math.pi*vector))
 
-def rosenbrock(vector, A=100, B=20):
+def rosenbrock(vector, A=100, B=20):  # Rosenbrock target function
     return np.math.exp(-np.sum(np.array([(A*(vector[i+1]-vector[i]**2)**2 + (1-vector[i])**2)/B for i in range(len(vector) - 1)])))
 
 
-class EvalMode(Enum):
+class EvalMode(Enum):  # Evaluation modes --> minimum & maximum
     MINIMUM = 1
     MAXIMUM = 2
 
-class Compare(Enum):
+class Compare(Enum):  # Compare result
     IMPROVES = 1
-    STAYS = 2
+    STAYS = 2  # Does not improve
 
 
 class Utils:
     @staticmethod
-    def compare(old, new, mode: EvalMode, target_fn) -> Compare:
+    def compare(x1, x2, mode: EvalMode, target_fn) -> Compare:
+        """
+        Given a target function and a compare mode,
+        tell if x2 improves x1
+
+        Params:
+            - x1 : position, np.ndarray type
+            - x2 : position, np.ndarray type
+            - mode: EvalMode type, if we're maximizing or minimizing
+            - target_fn: target function
+
+        Returns:
+            - Compare type result, namely if x2 improves x1 or not
+        """
         if mode == EvalMode.MAXIMUM:
-            if target_fn(new) > target_fn(old):
+            if target_fn(x2) > target_fn(x1):
                 return Compare.IMPROVES
             else:
                 return Compare.STAYS
         else:
-            if target_fn(new) < target_fn(old):
+            if target_fn(x2) < target_fn(x1):
                 return Compare.IMPROVES
             else:
                 return Compare.STAYS
 
     @staticmethod
     def around(f):
+        """
+        Keeps up to 5 decimals in given float type
+        """
         return np.around(np.float128(f), 5)  # just save 5 decimals
 
 
@@ -112,6 +128,9 @@ class SearchSpace():
 
 class Agent():
     def __init__(self, id: int, pos: np.ndarray):
+        """
+        Instantiates an agent given an identifier and a position
+        """
         self._id = id
         self.update_position(pos)
         self._hash = self._id.__hash__()
@@ -137,6 +156,7 @@ class Agent():
         return self._id
 
     def update_position(self, position: np.ndarray):
+        """Updates the position of the agent"""
         self._pos = np.array(Utils.around(position))
 
 
@@ -150,6 +170,18 @@ class DifferentialEvolution():
         f,
         mode: EvalMode
     ):
+        """
+        Instantiates DE class
+        
+        Params:
+             - space: SearchSpace type with space bounds configuration
+             - n_agents: number of agents to run
+             - target_fn: target function to minimize or maximize
+             - dims: number of dimensions to run
+             - cr: crossover parameter
+             - f: differential weight
+             - mode: compare mode, maximize or minimize
+        """
         self._space = space
         self._n_agents = n_agents
         self._target_fn = target_fn
@@ -158,7 +190,7 @@ class DifferentialEvolution():
                 [i for i in range(1, self._n_agents + 1)],
                 [Agent(i, space.random_bounded(dims)) for i in range(1, self._n_agents + 1)]
             )
-        )
+        )  # agents instances
         self._dims = dims
         self._cr = cr
         self._f = f
@@ -166,7 +198,7 @@ class DifferentialEvolution():
 
         self._update_best_pos(list(self.agents.values())[0].pos) # first agents' pos
 
-        for a in list(self.agents.values())[1:]:
+        for a in list(self.agents.values())[1:]:  # search global best position from random start
             eval_res = Utils.compare(self.best_pos, a.pos, self.mode, self.target_fn)
             if eval_res == Compare.IMPROVES:
                 self._update_best_pos(a.pos)
@@ -228,10 +260,10 @@ class DifferentialEvolution():
         """
         Performs Differential Evolution 
         """
-        for _ in range(iterations):
-            for id, agent in self.agents.items():
+        for _ in range(iterations):  # Run for K iterations
+            for id, agent in self.agents.items():  # Run for L agents
                 __subagents = self.agents.copy()
-                __subagents.pop(id)
+                __subagents.pop(id)  # all agents except the one that it's iterating
                 
                 if len(__subagents) < 3:  # check [a,b,c] can be selected
                     logging.critical(f'Agent {id} has no three mates [a,b,c]. Error.')
@@ -239,40 +271,40 @@ class DifferentialEvolution():
                 __abc: List[Agent] = []
                 for _ in range(0,3):  # select agents [a,b,c]
                     __abc.append(random.choice(list(__subagents.values())))
-                    __subagents.pop(__abc[-1].id)
+                    __subagents.pop(__abc[-1].id)  # remove selected agent of the availables so can't be repeatedly chosen
 
-                candidate_pos = {}
+                candidate_pos = {}  # Current agent candidate position
 
                 __i=0
-                for coord in agent.pos:  # register current positions in dictionary
+                for coord in agent.pos:  # register current positions in candidate dictionary
                    candidate_pos[__i] = coord
                    __i+=1 
                 
                 dims_list: Set[int] = list(candidate_pos.keys())  # current coordinates indexes [0,1,2...n_dims]
-                i_dim = random.choice(list(dims_list))
-                candidate_pos[i_dim] = __abc[0].pos[i_dim] + self.f * (__abc[1].pos[i_dim] - __abc[2].pos[i_dim])
-                dims_list.remove(i_dim)
+                i_dim = random.choice(list(dims_list))  # select i_dim randomly
+                candidate_pos[i_dim] = __abc[0].pos[i_dim] + self.f * (__abc[1].pos[i_dim] - __abc[2].pos[i_dim])  # x_i = a_i + F(b_i - c_i)
+                dims_list.remove(i_dim)  # remove i_dim from the selectable dims so can't be chosen again
                 
-                for j_dim in dims_list:
-                    threshold = np.random.uniform(low=0, high=1)
-                    if threshold < self.cr:
-                        candidate_pos[j_dim] = __abc[0].pos[j_dim] + self.f * (__abc[1].pos[j_dim] - __abc[2].pos[j_dim])
+                for j_dim in dims_list:  # for each j_dim of the rest of dimensions
+                    threshold = np.random.uniform(low=0, high=1)  # random number r_j
+                    if threshold < self.cr:  # if r_j < CR then
+                        candidate_pos[j_dim] = __abc[0].pos[j_dim] + self.f * (__abc[1].pos[j_dim] - __abc[2].pos[j_dim])  # x_j = a_j + F(b_j - c_j)
                 
-                candidate_refined = self.space.fix_position(np.array(list(candidate_pos.values())))
+                candidate_refined = self.space.fix_position(np.array(list(candidate_pos.values())))  # Refine position with given space bounds
 
-                if Utils.compare(agent.pos, candidate_refined, self.mode, self.target_fn) == Compare.IMPROVES:
+                if Utils.compare(agent.pos, candidate_refined, self.mode, self.target_fn) == Compare.IMPROVES:  # Fitness of the new position improves agent's position?
                     agent.update_position(candidate_refined)
-                    if Utils.compare(self.best_pos, agent.pos, self.mode, self.target_fn) == Compare.IMPROVES:
+                    if Utils.compare(self.best_pos, agent.pos, self.mode, self.target_fn) == Compare.IMPROVES:  # Fitness of the new position improves swarm position?
                         self._update_best_pos(agent.pos)
 
 
 # Configuration of the simulation
-N_DIMS = 5
-N_AGENTS = 10**2
-ITERATIONS = 10**4
-LOW, HIGH = -100, 100
-CR, FF = .65, 1.15
-MODE = EvalMode.MINIMUM
+N_DIMS = 2  # Number of dimensions
+N_AGENTS = 10**2  # Number of agents
+ITERATIONS = 10**3  # Number of iterations
+LOW, HIGH = -5, 5  # Space bounds (bounds for each dimensions)
+CR, FF = .65, 1.15  # crossover parameter, differential weight
+MODE = EvalMode.MINIMUM  # Choose between EvalMode.MAXIMUM and EvalMode.MINIMUM to minimize or maximize the value of the target function
 
 if __name__=='__main__':
     target_func = lambda vector: sphere(vector)  # [sphere | rastrigin | rosenbrock]
@@ -288,14 +320,10 @@ if __name__=='__main__':
         f=FF
     )
 
-    # print('Agents: ')
+    # print('Agents: ')  # prints agents
     # for agent in de.agents.values():
     #     print(f'\t{agent}')
     # print('\n')
-
-    agents_best = np.min(np.array([
-        de.target_fn(a.pos) for a in list(de.agents.values())
-    ]))
 
     print(f'Starter best: {de.best_pos} @ eval_fn_result: {de.best}')
 
