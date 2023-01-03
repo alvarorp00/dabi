@@ -12,7 +12,8 @@ import src.plot as plot
 def run():
     ms = [m for m in metaheuristics.__dict__.values()
             if isinstance(m, type) and issubclass(m, metaheuristics.Metaheuristic) and m is not metaheuristics.Metaheuristic]
-    # synergy_boos = synergy.SynergyBoost()
+    synergy_boost = synergy.SynergyBoost(ms)
+    synergy_boost.optimize(macros.objective_function, macros.initial_solution)
     print(ms)
     pass
 
