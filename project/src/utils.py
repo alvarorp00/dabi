@@ -1,7 +1,7 @@
 from enum import Enum
 import numpy as np
 
-from macros import eval_mode
+from macros import eval_mode as EVAL_MODE
 
 #####################
 # Fitness functions #
@@ -221,7 +221,7 @@ class Agent():
         """
         Updates best position and fitness if current fitness is better than the best one.
         """
-        if improves(self.fitness, self.best_fitness, macros.EVAL_MODE):
+        if improves(self.fitness, self.best_fitness, EVAL_MODE):
             self.best_fitness = self.fitness
             self.best_position = self.position
 
