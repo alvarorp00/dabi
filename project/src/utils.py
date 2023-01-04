@@ -241,9 +241,7 @@ class Agent():
     def search_space(self) -> SearchSpace:
         return self._search_space
 
-    @DeprecationWarning(
-        "Use utils.improves() and Agent.best_fitness setter instead."
-    )
+    @DeprecationWarning
     def update_best(self, eval_mode: EvalMode, adaptative: bool = False):
         """
         Updates best position and fitness if current fitness is better than
@@ -254,21 +252,21 @@ class Agent():
             self.best_fitness = self.fitness
             self.best_position = self.position
 
-    @DeprecationWarning("Use SearchSpace.bounded() instead.")
+    @DeprecationWarning
     def bounded(self) -> bool:
         """
         Checks if the agent is bounded to the search space.
         """
         return self.search_space.bounded(self.position)
 
-    @DeprecationWarning("Use SearchSpace.fix_position() instead.")
+    @DeprecationWarning
     def fix_position(self):
         """
         Fixes the position of the agent if it's not bounded to the search space.
         """
         self.position = self.search_space.fix_position(self.position)
 
-    @DeprecationWarning("Use SearchSpace.random_bounded() instead.")
+    @DeprecationWarning
     def random_bounded(self):
         """
         Generates a random position inside the search space.

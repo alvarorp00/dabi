@@ -2,10 +2,10 @@ from src.fitness_functions import sphere, rastrigin, rosenbrock, griewank
 from src.utils import EvalMode, Search, SearchSpace
 
 # Population
-population_size = 100
+population_size = 10
 
 # Number of iterations
-iterations = 100
+iterations = 1000
 
 # Number of dimensions
 dimensions = 2
@@ -14,16 +14,16 @@ dimensions = 2
 lower_bound = -5.12
 
 # Upper bound
-upper_bound = 5.12
+upper_bound = +5.12
 
 # Target function
-target_function = sphere
+target_function = rastrigin
 
 # Evaluation mode
-eval_mode = EvalMode.MINIMIZE
+eval_mode = EvalMode.MAXIMIZE
 
 # Search configuration
-search = Search(
+search: SearchSpace = Search(
     space=SearchSpace(
         lower_bound=lower_bound,
         upper_bound=upper_bound

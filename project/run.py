@@ -9,6 +9,8 @@ import src.metaheuristics as metaheuristics
 import src.synergy as synergy
 import src.plot as plot
 
+import src.utils as utils
+
 import src.macros as macros
 
 

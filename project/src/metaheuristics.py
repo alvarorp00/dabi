@@ -4,7 +4,6 @@ import numpy as np
 import random
 import logging
 import src.utils as utils
-import src.macros as macros
 
 
 class Metaheuristic(ABC):
@@ -23,11 +22,11 @@ class Metaheuristic(ABC):
         # It is not this class' responsibility to set up the parameters
         if 'agents' not in self._parameters:
             logging.critical('Agents not specified')
-        if 'population' not in self._parameters:
+        if 'population_size' not in self._parameters:
             logging.critical('Population size not specified')
 
         # Initialize best agent with the first agent
-        self.__best_agent = self._parameters['agents'][0]
+        self.best_agent = self.parameters.get('agents')[0]
 
     @property
     def search(self) -> utils.Search:
@@ -54,7 +53,7 @@ class Metaheuristic(ABC):
         return self._parameters.get('best_agent', None)
 
     @best_agent.setter
-    def __best_agent(self, best_agent: utils.Agent):
+    def best_agent(self, best_agent: utils.Agent):
         """
             Set the best agent found so far.
             Params:
@@ -63,7 +62,12 @@ class Metaheuristic(ABC):
         self._parameters['best_agent'] = best_agent
 
     @abstractmethod
-    def optimize(self):
+    def optimize(self) -> bool:
+        """
+            Optimize an objective function using the metaheuristic.
+            Returns:
+                - bool, True if the best agent was updated, False otherwise
+        """
         # code for optimizing an objective function using the metaheuristic
         # goes here, this is an abstract method
         pass
@@ -141,22 +145,31 @@ class ParticleSwarmOptimization(Metaheuristic):
 
 
 class DifferentialEvolution(Metaheuristic):
+    """
+    Differential Evolution metaheuristic.
+    Params:
+        - search: Search type, search object
+        - kwargs:
+            - agents: List[utils.Agent], list of agents
+            - crossover_rate: float, crossover rate
+            - diff_weight: float, differential weight
+    """
     def __init__(self, search: utils.Search, *args, **kwargs):
-        super().__init__(search, args, kwargs)
+        super().__init__(search, *args, **kwargs)
         # Check specific parameters for Differential Evolution
-        if 'crossover_rate' not in self._parameters:
+        if 'crossover_rate' not in self.parameters:
             return ValueError('Crossover rate not specified')
 
-        if 'diff_weight' not in self._parameters:
+        if 'diff_weight' not in self.parameters:
             return ValueError('Differential weight not specified')
 
     @property
     def crossover_rate(self) -> float:
-        return self._parameters.get('crossover_rate', None)
+        return self.parameters.get('crossover_rate', None)
 
     @property
     def diff_weight(self) -> float:
-        return self._parameters.get('diff_weight', None)
+        return self.parameters.get('diff_weight', None)
 
     def optimize(self):
         """
@@ -174,7 +187,7 @@ class DifferentialEvolution(Metaheuristic):
 
             # Copy current agent's position
             new_position = agent.position.copy()
-            
+
             # Select i-th dimension to mutate
             i = random.randint(0, len(new_position) - 1)
             new_position[i] = random_agents[0].position[i] + \
@@ -204,7 +217,7 @@ class DifferentialEvolution(Metaheuristic):
             ):
                 agent.position = new_position
                 agent.fitness = new_fitness
-            
+
             # Update global best agent if new fitness is better
             if utils.improves(
                 self.best_agent.fitness,
@@ -212,6 +225,8 @@ class DifferentialEvolution(Metaheuristic):
                 self.search.mode
             ):
                 self.best_agent = agent
+                return True  # New global best agent found
+        return False
 
     def update_parameters(self, **kwargs):
         # Update parameters of the metaheuristic
