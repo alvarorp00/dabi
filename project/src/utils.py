@@ -57,7 +57,7 @@ def compare(a, b, mode):
 
 def improves(a, b, mode, adaptative=False):
     """
-        Check if a improves b.
+        Check if b improves a.
         Adaptative mode: if a and b are equal, then b improves a.
     """
     __r = compare(a, b, mode) == CompareResult.GREATER
