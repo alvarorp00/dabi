@@ -1,33 +1,16 @@
 from enum import Enum
 import numpy as np
 
-from macros import eval_mode as EVAL_MODE
-
-#####################
-# Fitness functions #
-#####################
-
-def sphere(vector):  # Sphere target function
-    return np.sum(np.power(vector, 2))
-       
-def rastrigin(vector, A=10):  # Rastrigin target function
-    return A + np.sum(np.power(vector, 2) - A * np.cos(2*np.math.pi*vector))
-   
-def rosenbrock(vector, A=100, B=20):  # Rosenbrock target function
-    return np.math.exp(-np.sum(np.array([(A*(vector[i+1]-vector[i]**2)**2 + (1-vector[i])**2)/B for i in range(len(vector) - 1)])))
-
-def griewank(vector, A=1, B=1):  # Griewank target function
-    return np.math.exp(-np.sum(np.array([A*(vector[i]**2)/4000 for i in range(len(vector))])) - np.math.exp(np.sum(np.array([np.math.cos(vector[i]/np.math.sqrt(i+1)) for i in range(len(vector))]))/B))
-
 ####################
 # Helper functions #
 ####################
 
-def around(f):
+
+def around(f, decimals=5):
     """
-    Keeps up to 5 decimals in given float type
+    Keeps up to n (default=5) decimals in given float type
     """
-    return np.around(np.float128(f), 5)  # just save 5 decimals
+    return np.around(np.float128(f), decimals=decimals)
 
 ####################
 
@@ -36,16 +19,20 @@ def around(f):
 ####################
 
 # Compare mode
+
+
 class EvalMode(Enum):
     """Evaluation mode."""
     MINIMIZE = 0
     MAXIMIZE = 1
+
 
 class CompareResult(Enum):
     """Compare result."""
     LESS = -1
     EQUAL = 0
     GREATER = 1
+
 
 def compare(a, b, mode):
     """
@@ -66,6 +53,7 @@ def compare(a, b, mode):
             return CompareResult.EQUAL
         else:
             return CompareResult.GREATER
+
 
 def improves(a, b, mode, adaptative=False):
     """
@@ -91,6 +79,18 @@ class Search():
         self._space = space
         self._objective_function = objective_function
         self._mode = mode
+
+    @property
+    def space(self):
+        return self._space
+
+    @property
+    def objective_function(self):
+        return self._objective_function
+
+    @property
+    def mode(self):
+        return self._mode
 
 
 class SearchSpace():
@@ -119,7 +119,7 @@ class SearchSpace():
 
         Params:
             - pos: np.ndarray type, whose coords are going to be checked
-        
+
         Returns:
             - bounded: bool type, true if all coords are inside bounds, false otherwise
         """
@@ -133,7 +133,7 @@ class SearchSpace():
 
         Params:
             - pos: array type, position to be checked and fixed
-        
+
         Returns:
             - fixed position: np.ndarray type
         """
@@ -146,7 +146,7 @@ class SearchSpace():
             else:
                 _fxd_pos.append(p)
         return np.array(_fxd_pos)
-    
+
     def random_bounded(self, dims: int) -> np.ndarray:
         """
         Returns a random position inside the bounds of the space
@@ -159,13 +159,23 @@ class SearchSpace():
 # Agent class. Could act as particle, ant, etc. It's a generic class for representing positions in a search space
 # and keeping track of its fitness (together with it's best position and fitness).
 
+
 class Agent():
+    """
+    Agent class. Could act as particle, ant, etc.
+    It's a generic class for representing positions in a search space.
+
+    Agent's best fitness is the result of applying the objective function
+    to the best position, so we store it to avoid unnecessary computations.
+    """
     def __init__(self, id: int, position: np.ndarray, search: Search):
         """
-        Creates an Agent object.
+        Creates an Agent object. Best position and fitness are initialized to
+        the given position and fitness.
 
         Params:
-            - position: np.ndarray type, position of the agent in the search space
+            - position: np.ndarray type, position of the agent in the search
+                        space
             - fitness: float type, fitness of the agent
             - search_space: SearchSpace type, search space where the agent is
         """
@@ -183,6 +193,9 @@ class Agent():
 
     @property
     def position(self) -> np.ndarray:
+        """
+        Agent's position, which is a N-th dimensional array.
+        """
         return self._position
 
     @position.setter
@@ -191,6 +204,10 @@ class Agent():
 
     @property
     def fitness(self) -> float:
+        """
+        Agent's fitness is the result of applying the objective function,
+        so we store it to avoid unnecessary computations for future calls.
+        """
         return self._fitness
 
     @fitness.setter
@@ -199,6 +216,9 @@ class Agent():
 
     @property
     def best_position(self) -> np.ndarray:
+        """
+        Agent's best position, which is a N-th dimensional array.
+        """
         return self._best_position
 
     @best_position.setter
@@ -207,6 +227,10 @@ class Agent():
 
     @property
     def best_fitness(self) -> float:
+        """
+        Agent's best fitness is the result of applying the objective function,
+        so we store it to avoid unnecessary computations for future calls.
+        """
         return self._best_fitness
 
     @best_fitness.setter
@@ -217,26 +241,34 @@ class Agent():
     def search_space(self) -> SearchSpace:
         return self._search_space
 
-    def update_best(self):
+    @DeprecationWarning(
+        "Use utils.improves() and Agent.best_fitness setter instead."
+    )
+    def update_best(self, eval_mode: EvalMode, adaptative: bool = False):
         """
-        Updates best position and fitness if current fitness is better than the best one.
+        Updates best position and fitness if current fitness is better than
+        the best one.
         """
-        if improves(self.fitness, self.best_fitness, EVAL_MODE):
+        if improves(self.fitness, self.best_fitness, eval_mode,
+                    adaptative=adaptative):
             self.best_fitness = self.fitness
             self.best_position = self.position
 
+    @DeprecationWarning("Use SearchSpace.bounded() instead.")
     def bounded(self) -> bool:
         """
         Checks if the agent is bounded to the search space.
         """
         return self.search_space.bounded(self.position)
 
+    @DeprecationWarning("Use SearchSpace.fix_position() instead.")
     def fix_position(self):
         """
         Fixes the position of the agent if it's not bounded to the search space.
         """
         self.position = self.search_space.fix_position(self.position)
 
+    @DeprecationWarning("Use SearchSpace.random_bounded() instead.")
     def random_bounded(self):
         """
         Generates a random position inside the search space.
