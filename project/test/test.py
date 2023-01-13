@@ -1,0 +1,68 @@
+import sys
+import os
+
+sys.path.insert(0, os.getcwd())
+
+import src.macros as macros
+import src.utils as utils
+import src.agents as agents
+import src.synergy as synergy
+from src.metaheuristics import ArtificialBeeColony, DifferentialEvolution
+
+
+import numpy as np
+
+############################################
+
+
+def new_differential_evolution():
+    """
+    Instantiates a new Differential Evolution algorithm with a random population.
+    """
+
+    crossover_rate = np.random.uniform()
+    differential_weight = np.random.uniform()
+
+    params = {
+        'population_size': macros.population_size,
+        'diff_weight': differential_weight,
+        'crossover_rate': crossover_rate
+    }
+
+    de = DifferentialEvolution(
+        search=macros.search,
+        **params
+    )
+
+    return de
+
+
+def new_artificial_bee_colony():
+    """
+    Instantiates a new Artificial Bee Colony algorithm with a random population.
+    """
+
+    params = {
+        'population_size': macros.population_size,
+        'max_trials': 100,
+    }
+
+    abc = ArtificialBeeColony(
+        search=macros.search,
+        **params
+    )
+
+    return abc
+
+
+# ms = [new_differential_evolution() for _ in range(0, 10)]  # 10 metaheuristics to be combined of DE
+# ms = [new_differential_evolution(), new_artificial_bee_colony()]  # 2 metaheuristics to be combined of DE and ABC
+ms = [new_artificial_bee_colony() for _ in range(0, 10)]  # 2 metaheuristics to be combined of ABC
+
+params = {
+    'iterations': macros.iterations
+}
+
+synergy_boost = synergy.SynergyBoost(metaheuristics=ms, search=macros.search, **params)
+synergy_boost.optimize()
+print(f'Best agent: {synergy_boost.best_agent} @ Fitness: {synergy_boost.best_agent.fitness} @ Position: {synergy_boost.best_agent.position}')
