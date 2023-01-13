@@ -4,6 +4,7 @@ import numpy as np
 
 from src.metaheuristics import Metaheuristic
 import src.utils as utils
+import src.agents as agents
 
 
 class SynergyBoost:
@@ -63,11 +64,11 @@ class SynergyBoost:
         self._search = search
 
     @property
-    def best_agent(self) -> utils.Agent:
+    def best_agent(self) -> agents.Agent:
         return self._best_agent
 
     @best_agent.setter
-    def best_agent(self, best_agent: utils.Agent):
+    def best_agent(self, best_agent: agents.Agent):
         self._best_agent = best_agent
 
     @property

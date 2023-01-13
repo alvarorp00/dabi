@@ -20,7 +20,7 @@ upper_bound = +5.12
 target_function = rastrigin
 
 # Evaluation mode
-eval_mode = EvalMode.MAXIMIZE
+eval_mode = EvalMode.MINIMIZE
 
 # Search configuration
 search: SearchSpace = Search(
@@ -29,5 +29,6 @@ search: SearchSpace = Search(
         upper_bound=upper_bound
     ),
     objective_function=target_function,
-    mode=eval_mode
+    mode=eval_mode,
+    dims=dimensions
 )

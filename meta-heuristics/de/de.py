@@ -301,13 +301,13 @@ class DifferentialEvolution():
 N_DIMS = 2  # Number of dimensions
 N_AGENTS = 10**2  # Number of agents
 ITERATIONS = 10**3  # Number of iterations
-LOW, HIGH = -5, 5  # Space bounds (bounds for each dimensions)
+LOW, HIGH = -5.12, 5.12  # Space bounds (bounds for each dimensions)
 CR, FF = .65, 1.15  # crossover parameter, differential weight
 MODE = EvalMode.MINIMUM  # Choose between EvalMode.MAXIMUM and EvalMode.MINIMUM to minimize or maximize the value of the target function
 
-if __name__=='__main__':
-    target_func = lambda vector: sphere(vector)  # [sphere | rastrigin | rosenbrock]
-
+if __name__ =='__main__':
+    # target_func = lambda vector: sphere(vector)  # [sphere | rastrigin | rosenbrock]
+    target_func = rastrigin
     ss = SearchSpace(LOW, HIGH)
     de = DifferentialEvolution(
         space=ss,
