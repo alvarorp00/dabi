@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import copy
 from scipy import stats as st
-from typing import List, Set
+from typing import List
 import numpy as np
 import random
 import logging
@@ -319,7 +319,7 @@ class ArtificialBeeColony(Metaheuristic):
         selected_id = self.select_bee()
         selected_bee = self.get_bee(selected_id)
         bee.position = selected_bee.position.copy()
-        bee.fitness = self.search.objective_function(bee.position)
+        bee.fitness = selected_bee.fitness
 
         return self.send_employee(bee)
 
@@ -630,7 +630,7 @@ class ParticleSwarmOptimization(Metaheuristic):
             logging.critical(
                 "Social not specified for the Particle Swarm Optimization"
             )
-        
+
         # specific initialization code for the Particle Swarm Optimization
         self.particles = [
             agents_module.Particle(
