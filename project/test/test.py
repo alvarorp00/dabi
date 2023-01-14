@@ -7,7 +7,7 @@ import src.macros as macros
 import src.utils as utils
 import src.agents as agents
 import src.synergy as synergy
-from src.metaheuristics import ArtificialBeeColony, DifferentialEvolution
+from src.metaheuristics import ArtificialBeeColony, DifferentialEvolution, ParticleSwarmOptimization
 
 
 import numpy as np
@@ -55,9 +55,30 @@ def new_artificial_bee_colony():
     return abc
 
 
+def new_particle_swarm_optimization():
+    """
+    Instantiates a new Particle Swarm Optimization algorithm with a random population.
+    """
+
+    params = {
+        'population_size': macros.population_size,
+        'inertia': 0.5,
+        'cognitive': 0.5,
+        'social': 0.5,
+    }
+
+    pso = ParticleSwarmOptimization(
+        search=macros.search,
+        **params
+    )
+
+    return pso
+
+
 # ms = [new_differential_evolution() for _ in range(0, 10)]  # 10 metaheuristics to be combined of DE
 # ms = [new_differential_evolution(), new_artificial_bee_colony()]  # 2 metaheuristics to be combined of DE and ABC
-ms = [new_artificial_bee_colony() for _ in range(0, 10)]  # 10 metaheuristics to be combined of ABC
+# ms = [new_artificial_bee_colony() for _ in range(0, 10)]  # 10 metaheuristics to be combined of ABC
+ms = [new_particle_swarm_optimization() for _ in range(0, 10)]  # 10 metaheuristics to be combined of PSO
 
 params = {
     'iterations': macros.iterations

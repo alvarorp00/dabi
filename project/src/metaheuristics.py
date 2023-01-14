@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import copy
 from scipy import stats as st
 from typing import List, Set
 import numpy as np
@@ -47,7 +48,7 @@ class Metaheuristic(ABC):
             __a_idx = np.argmax(
                     [a.best_fitness for a in self.agents]
                 )
-        self.best_agent = self.agents[__a_idx]
+        self.best_agent = copy.deepcopy(self.agents[__a_idx])
 
     @property
     def search(self) -> utils.Search:
@@ -215,7 +216,7 @@ class ArtificialBeeColony(Metaheuristic):
                 # Update best agent
                 if utils.improves(self.best_agent.fitness, bee.fitness,
                                   self.search.mode):
-                    self.best_agent = bee
+                    self.best_agent = copy.deepcopy(bee)
                     updated = True
             else:
                 # Increase trials
@@ -238,7 +239,7 @@ class ArtificialBeeColony(Metaheuristic):
                 # Update best agent
                 if utils.improves(self.best_agent.fitness, bee.fitness,
                                   self.search.mode):
-                    self.best_agent = bee
+                    self.best_agent = copy.deepcopy(bee)
                     updated = True
 
         # Scouting bees
@@ -295,6 +296,11 @@ class ArtificialBeeColony(Metaheuristic):
             # Update b_i position and fitness
             bee.position = candidate_position
             bee.fitness = candidate_fitness
+
+            # Update best known position of the bee
+            bee.best_position = bee.position
+            # Update best fitness of the bee
+            bee.best_fitness = bee.fitness
 
             return True
         return False
@@ -460,27 +466,107 @@ class WaterCycleAlgorithm(Metaheuristic):
 class ParticleSwarmOptimization(Metaheuristic):
     def __init__(self, search: utils.Search, *args, **kwargs):
         super().__init__(search, *args, **kwargs)
-        # specific initialization code for the Particle Swarm Optimization
 
+        # Check specific parameters for the Particle Swarm Optimization
+        if 'inertia' not in kwargs:
+            logging.critical(
+                "Inertia not specified for the Particle Swarm Optimization"
+            )
+        if 'cognitive' not in kwargs:
+            logging.critical(
+                "Cognitive not specified for the Particle Swarm Optimization"
+            )
+        if 'social' not in kwargs:
+            logging.critical(
+                "Social not specified for the Particle Swarm Optimization"
+            )
+        
+        # specific initialization code for the Particle Swarm Optimization
         self.particles = [
             agents_module.Particle(
                 id=i,
-                position=self.search.space.random_bounded(),
+                position=self.search.space.random_bounded(search.dims),
                 search=self.search,
                 velocity=np.zeros(self.search.dims),
             ) for i in range(self.population_size)
         ]
 
+        # Initialize best agent
+        self._start_best_agent()
+
+    @property
+    def particles(self) -> List[agents_module.Particle]:
+        return self._particles
+
+    @particles.setter
+    def particles(self, particles: List[agents_module.Particle]):
+        self._particles = particles
+
+    @property
+    def inertia(self) -> float:
+        return self.parameters.get('inertia', None)
+
+    @property
+    def cognitive(self) -> float:
+        return self.parameters.get('cognitive', None)
+
+    @property
+    def social(self) -> float:
+        return self.parameters.get('social', None)
+
+    @property
+    def agents(self):
+        return self.particles  # For compatibility with other metaheuristics
+
     def optimize(self):
-        # specific code for optimizing an objective function using
-        # the Particle Swarm Optimization algorithm goes here
-        pass
+        update = False
+        for particle in self.particles:
+            particle.update_velocity(
+                inertia=self.inertia,
+                cognitive=self.cognitive,
+                social=self.social,
+                swarm_best=self.best_agent
+            )
+            particle.position = particle.position + particle.velocity
+
+            # Fix position if it's out of bounds
+            particle.position = self.search.space.fix_position(
+                particle.position
+            )
+
+            # Update fitness
+            particle.fitness = self.search.objective_function(
+                particle.position
+            )
+
+            # Check if improves particle's best position
+            if utils.improves(
+                particle.best_fitness,
+                particle.fitness,
+                self.search.mode
+            ):
+                particle.best_position = particle.position
+                particle.best_fitness = particle.fitness
+
+                # Check if improves global best position
+                if utils.improves(
+                    self.best_agent.fitness,
+                    particle.best_fitness,
+                    self.search.mode
+                ):
+                    self.best_agent = copy.deepcopy(particle)
+
+                update = True
+        return update
+
+            
 
     def update_parameters(self, **kwargs):
         # Update parameters of the metaheuristic
         # Maybe sharing agents between metaheuristics is a good idea,
         # together with their positions and fitnesses, etc
         # Code goes here, this is an abstract method
+        # TODO: Implement this method
         pass
 
 
@@ -575,7 +661,7 @@ class DifferentialEvolution(Metaheuristic):
                 new_fitness,
                 self.search.mode
             ):
-                self.best_agent = agent
+                self.best_agent = copy.deepcopy(agent)
                 return True  # New global best agent found
         return False
 
@@ -586,22 +672,4 @@ class DifferentialEvolution(Metaheuristic):
         # Code goes here, this is an abstract method
         pass
 
-
-class FireflyAlgorithm(Metaheuristic):
-    def __init__(self, search: utils.Search, *args, **kwargs):
-        super().__init__(search, args, kwargs)
-        # specific initialization code for the Firefly Algorithm
-        # goes here
-        pass
-
-    def optimize(self):
-        # specific code for optimizing an objective function using
-        # the Firefly Algorithm goes here
-        pass
-
-    def update_parameters(self, **kwargs):
-        # Update parameters of the metaheuristic
-        # Maybe sharing agents between metaheuristics is a good idea,
-        # together with their positions and fitnesses, etc
-        # Code goes here, this is an abstract method
-        pass
+# MODULE ENDS HERE

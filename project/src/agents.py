@@ -178,7 +178,13 @@ class Bee(Agent):
 
 
 class Particle(Agent):
-    def __init__(self, id: int, position: np.ndarray, search: Search):
+    def __init__(self,
+                 id: int,
+                 position:
+                 np.ndarray,
+                 search: Search,
+                 velocity: np.ndarray = None
+                 ):
         """
         Creates a Particle object.
 
@@ -192,8 +198,8 @@ class Particle(Agent):
         Default velocity is zero.
         """
         super().__init__(id, position, search)
-        self._velocity = np.zeros_like(self.position)
-        self._best_velocity = np.zeros_like(self.position)
+        self._velocity = velocity
+        self._best_velocity = velocity
 
     @property
     def velocity(self) -> np.ndarray:
@@ -210,6 +216,18 @@ class Particle(Agent):
     @best_velocity.setter
     def best_velocity(self, best_velocity: np.ndarray):
         self._best_velocity = best_velocity
+
+    def update_velocity(self,
+                        inertia: float,
+                        cognitive: float,
+                        social: float,
+                        swarm_best: 'Particle' = None):
+        """
+        Updates the velocity of the particle.
+        """
+        self.velocity = inertia * self.velocity + \
+            cognitive * np.random.rand() * (self.best_position - self.position) + \
+            social * np.random.rand() * (swarm_best.position - self.position)  # noqa: E501
 
     def __str__(self):
         return f"Particle {self.id}"
