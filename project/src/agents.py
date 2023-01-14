@@ -134,6 +134,9 @@ class Agent():
     def __eq__(self, other) -> bool:
         return self.id == other.id
 
+    def __ne__(self, other) -> bool:
+        return self.id != other.id
+
     def __hash__(self) -> int:
         return hash(self.id)
 
@@ -185,6 +188,8 @@ class Particle(Agent):
             - fitness: float type, fitness of the particle
             - search_space: SearchSpace type,
                             search space where the particle is
+
+        Default velocity is zero.
         """
         super().__init__(id, position, search)
         self._velocity = np.zeros_like(self.position)

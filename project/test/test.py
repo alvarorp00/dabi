@@ -44,7 +44,7 @@ def new_artificial_bee_colony():
 
     params = {
         'population_size': macros.population_size,
-        'max_trials': 100,
+        'max_trials': 50,
     }
 
     abc = ArtificialBeeColony(
@@ -57,7 +57,7 @@ def new_artificial_bee_colony():
 
 # ms = [new_differential_evolution() for _ in range(0, 10)]  # 10 metaheuristics to be combined of DE
 # ms = [new_differential_evolution(), new_artificial_bee_colony()]  # 2 metaheuristics to be combined of DE and ABC
-ms = [new_artificial_bee_colony() for _ in range(0, 10)]  # 2 metaheuristics to be combined of ABC
+ms = [new_artificial_bee_colony() for _ in range(0, 10)]  # 10 metaheuristics to be combined of ABC
 
 params = {
     'iterations': macros.iterations

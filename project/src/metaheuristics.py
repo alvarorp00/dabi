@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from scipy import stats as st
-from typing import List
+from typing import List, Set
 import numpy as np
 import random
 import logging
-import src.agents as agents
+import src.agents as agents_module
 import src.utils as utils
 
 
@@ -94,7 +94,7 @@ class Metaheuristic(ABC):
         """
             Set the best agent found so far.
             Params:
-                - best_agent: agents.Agent, best agent found so far
+                - best_agent: agents_module.Agent, best agent found so far
         """
         self._parameters['best_agent'] = best_agent
 
@@ -139,24 +139,26 @@ class ArtificialBeeColony(Metaheuristic):
                 logging.critical('Max trials must be greater than 0')
 
         # Initialize employed bees
-        self.employed_bees = [
-            agents.Bee(
-                i,
-                search.space.random_bounded(search.dims),
-                search
-            ) for i in range(self.population_size // 2)
-        ]  # Half of the bees are employed bees
+        self.employed_bees = set([
+                agents_module.Bee(
+                    i,
+                    search.space.random_bounded(search.dims),
+                    search
+                ) for i in range(self.population_size // 2)
+            ]  # Half of the bees are employed bees
+        )
 
         # Initialize onlooker bees with positions of employed bees and weights
-        self.onlooker_bees = [
-            agents.Bee(
-                i,
-                np.zeros(search.dims),  # It's updated later in the algorithm
-                search
-            ) for i in range(self.population_size // 2)
-        ]  # Half of the bees are onlooker_bees
+        self.onlooker_bees = set([
+                agents_module.Bee(
+                    i + self.population_size // 2,  # do not overlap ids
+                    np.zeros(search.dims),  # Updated later in the algorithm
+                    search
+                ) for i in range(self.population_size // 2)
+            ]  # Half of the bees are onlooker_bees
+        )
 
-        self.scouting_bees = []  # Initially 0
+        self.scouting_bees = set()  # Initially 0
 
         self.scouting_counter = self.population_size *\
             search.dims  # Number of dimensions
@@ -165,32 +167,32 @@ class ArtificialBeeColony(Metaheuristic):
         self._start_best_agent()
 
     @property
-    def employed_bees(self) -> List[agents.Bee]:
+    def employed_bees(self) -> set[agents_module.Bee]:
         return self._parameters.get('employed_bees', None)
 
     @employed_bees.setter
-    def employed_bees(self, employed_bees: List[agents.Bee]):
+    def employed_bees(self, employed_bees: set[agents_module.Bee]):
         self._parameters['employed_bees'] = employed_bees
 
     @property
-    def onlooker_bees(self) -> List[agents.Bee]:
+    def onlooker_bees(self) -> set[agents_module.Bee]:
         return self._parameters.get('onlooker_bees', None)
 
     @onlooker_bees.setter
-    def onlooker_bees(self, onlooker_bees: List[agents.Bee]):
+    def onlooker_bees(self, onlooker_bees: set[agents_module.Bee]):
         self._parameters['onlooker_bees'] = onlooker_bees
 
     @property
-    def scouting_bees(self) -> List[agents.Bee]:
+    def scouting_bees(self) -> set[agents_module.Bee]:
         return self._parameters.get('scouting_bees', None)
 
     @scouting_bees.setter
-    def scouting_bees(self, scouting_bees: List[agents.Bee]):
+    def scouting_bees(self, scouting_bees: set[agents_module.Bee]):
         self._parameters['scouting_bees'] = scouting_bees
 
     @property
     def bees(self):
-        return self.employed_bees + self.onlooker_bees + self.scouting_bees
+        return self.employed_bees | self.onlooker_bees | self.scouting_bees
 
     @property
     def max_trials(self) -> int:
@@ -198,15 +200,16 @@ class ArtificialBeeColony(Metaheuristic):
 
     # Override agents property to return the employed bees
     @property
-    def agents(self) -> List[agents.Agent]:
+    def agents(self) -> List[agents_module.Agent]:
         # Only employed bees initially, which is when this method is called
-        return self.employed_bees
+        return list(self.employed_bees)
 
     def optimize(self) -> bool:
         updated = False
         # Perform a step of the metaheuristic
 
         # Employed bees
+        removals = set()
         for bee in self.employed_bees:
             if self.send_employee(bee):  # Send employed bee to search
                 # Update best agent
@@ -215,10 +218,18 @@ class ArtificialBeeColony(Metaheuristic):
                     self.best_agent = bee
                     updated = True
             else:
+                # Increase trials
+                bee.trials += 1
+                # Check if it's the only bee left in the employed bees
+                if len(self.employed_bees) == 1:
+                    # If so, force scout immediately
+                    self.send_scout(bee)
                 if bee.trials >= self.max_trials:
                     # Add to scouts and remove from employed bees
-                    self.scouting_bees.append(bee)
-                    self.employed_bees.remove(bee)
+                    self.scouting_bees.add(bee)
+                    removals.add(bee)
+        # Remove bees from employed bees
+        self.employed_bees -= removals
 
         # Onlooker bees
 
@@ -233,22 +244,13 @@ class ArtificialBeeColony(Metaheuristic):
         # Scouting bees
         if len(self.scouting_bees) > 0:  # If there are scouts
             # Select bee with the biggest number of trials
-            bee = self.employed_bees[np.argmax([bee.trials for bee in
-                                                self.scouting_bees])]
-            # if self.send_employee(bee):  # Send employed bee to search
-            #     # Update best agent
-            #     if utils.improves(self.best_agent.fitness, bee.fitness,
-            #                       self.search.mode):
-            #         self.best_agent = bee
-            #         updated = True
+            bee = self.biggest_trial_bee()
 
             # New position purely random
-            bee.position = self.search.space.random_bounded(self.search.dims)
-            bee.fitness = self.search.objective_function(bee.position)
+            self.send_scout(bee)
 
             # Delete previous bee from scouts and add it to employed bees
-            bee.trials = 0
-            self.employed_bees.append(bee)
+            self.employed_bees.add(bee)
             self.scouting_bees.remove(bee)
 
         return updated
@@ -258,7 +260,7 @@ class ArtificialBeeColony(Metaheuristic):
             Send an employed bee to search for a new position.
 
             Params:
-                - bee: agents.EmployedBee, employed bee to send
+                - bee: agents_module.Bee, employed bee to send
 
             Returns:
                 - bool, True if the employed bee was updated, False otherwise
@@ -267,14 +269,15 @@ class ArtificialBeeColony(Metaheuristic):
         k_i = random.randint(0, self.search.dims - 1)
 
         # Select a random employed bee b'
-        random_bee = self.bees
+        random_bee = self.bees.copy()
         random_bee.remove(bee)
         random_bee = random.sample(random_bee, 1)[0]
 
         # Generate a new position for b_i in the k_i dimension
         candidate_position = bee.position.copy()
         candidate_position[k_i] = candidate_position[k_i] +\
-            random.uniform(-1, 1) * (bee.position[k_i] - random_bee.position[k_i])
+            random.uniform(-1, 1) *\
+            (bee.position[k_i] - random_bee.position[k_i])
         # Fix position, must be inside the search space
         candidate_position =\
             self.search.space.fix_position(candidate_position)
@@ -298,7 +301,8 @@ class ArtificialBeeColony(Metaheuristic):
 
     def send_onlooker(self, bee):
         selected_id = self.select_bee()
-        bee.position = self.employed_bees[selected_id].position
+        selected_bee = self.get_bee(selected_id, self.employed_bees)
+        bee.position = selected_bee.position.copy()
         bee.fitness = self.search.objective_function(bee.position)
 
         return self.send_employee(bee)
@@ -342,7 +346,7 @@ class ArtificialBeeColony(Metaheuristic):
     def select_bee(self) -> int:
         """
             Select a bee to send to the onlooker bees phase.
-            
+
             Returns:
                 - int, id of the selected bee
 
@@ -356,7 +360,8 @@ class ArtificialBeeColony(Metaheuristic):
         # Get weights of employed bees fitnesses
         weights = np.array([bee.fitness for bee in self.employed_bees],
                            dtype=np.float64)
-        ids = np.arange(len(self.employed_bees))
+        # Ids of employed bees are not necessarily ordered
+        ids = np.array([bee.id for bee in self.employed_bees])  # Get ids
         mapping = dict(zip(ids, weights))  # Map ids to fitnesses
         # Sort mapping by fitnesses in ascending order
         mapping = sorted(mapping.items(), key=lambda kv: kv[1])
@@ -366,7 +371,63 @@ class ArtificialBeeColony(Metaheuristic):
         # Get a random bee given previous probabilities
         selected_id = np.random.choice(ids, p=probs)
 
+        # print("id_selected: ", selected_id)
+
         return selected_id
+
+    def biggest_trial_bee(self) -> agents_module.Bee:
+        """
+            Get the biggest number of trials of the employed bees.
+
+            Returns:
+                - bee, bee with the biggest number of trials
+        """
+        # Get the number of trials of the scouting bees
+        trials = np.array([bee.trials for bee in self.scouting_bees])
+
+        # Get the ids of the scouting bees
+        ids = np.array([bee.id for bee in self.scouting_bees])
+
+        # Map ids to trials
+        mapping = dict(zip(ids, trials))
+        # Sort mapping by trials in ascending order
+        mapping = sorted(mapping.items(), key=lambda kv: kv[1])
+
+        # Return the bee with the biggest number of trials
+        bee = self.get_bee(
+            mapping[-1][0],  # [0] because mapping is a list of tuples
+            bee_set=self.scouting_bees
+        )
+
+        return bee
+
+    def get_bee(self, id: int, bee_set) -> agents_module.Bee:
+        """
+            Get an employed bee given its id.
+
+            Params:
+                - id: int, id of the bee to get
+
+            Returns:
+                - agents_module.Bee, bee with the given id
+        """
+        return [bee for bee in bee_set if bee.id == id][0]
+
+    def send_scout(self, bee: agents_module.Bee):
+        """
+            Force the given bee to scout.
+
+            Use this method when the bee has reached the maximum
+            number of trials and there are no more bees in the
+            employed bees set (skip steps), or whenever you want
+            to force a bee to scout.
+
+            It's important to select a bigger number for the population
+            or a bigger number for the maximum number of trials.
+        """
+        bee.position = self.search.space.random_bounded(dims=self.search.dims)
+        bee.fitness = self.search.objective_function(bee.position)
+        bee.trials = 0
 
     def update_parameters(self, **kwargs):
         # Update parameters of the metaheuristic
@@ -400,8 +461,15 @@ class ParticleSwarmOptimization(Metaheuristic):
     def __init__(self, search: utils.Search, *args, **kwargs):
         super().__init__(search, *args, **kwargs)
         # specific initialization code for the Particle Swarm Optimization
-        # goes here
-        pass
+
+        self.particles = [
+            agents_module.Particle(
+                id=i,
+                position=self.search.space.random_bounded(),
+                search=self.search,
+                velocity=np.zeros(self.search.dims),
+            ) for i in range(self.population_size)
+        ]
 
     def optimize(self):
         # specific code for optimizing an objective function using
@@ -436,7 +504,7 @@ class DifferentialEvolution(Metaheuristic):
 
         # Initialize agents
         self.agents = [
-            agents.Agent(
+            agents_module.Agent(
                 i,
                 search.space.random_bounded(search.dims),
                 search
