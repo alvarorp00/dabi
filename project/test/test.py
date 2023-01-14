@@ -44,7 +44,7 @@ def new_artificial_bee_colony():
 
     params = {
         'population_size': macros.population_size,
-        'max_trials': 50,
+        'max_trials': macros.population_size * macros.search.dims,
     }
 
     abc = ArtificialBeeColony(
@@ -77,8 +77,8 @@ def new_particle_swarm_optimization():
 
 # ms = [new_differential_evolution() for _ in range(0, 10)]  # 10 metaheuristics to be combined of DE
 # ms = [new_differential_evolution(), new_artificial_bee_colony()]  # 2 metaheuristics to be combined of DE and ABC
-# ms = [new_artificial_bee_colony() for _ in range(0, 10)]  # 10 metaheuristics to be combined of ABC
-ms = [new_particle_swarm_optimization() for _ in range(0, 10)]  # 10 metaheuristics to be combined of PSO
+ms = [new_artificial_bee_colony() for _ in range(0, 10)]  # 10 metaheuristics to be combined of ABC
+# ms = [new_particle_swarm_optimization() for _ in range(0, 10)]  # 10 metaheuristics to be combined of PSO
 
 params = {
     'iterations': macros.iterations

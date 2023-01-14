@@ -23,7 +23,7 @@ target_function = rastrigin
 eval_mode = EvalMode.MINIMIZE
 
 # Search configuration
-search: SearchSpace = Search(
+search: Search = Search(
     space=SearchSpace(
         lower_bound=lower_bound,
         upper_bound=upper_bound

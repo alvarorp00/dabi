@@ -161,8 +161,10 @@ class ArtificialBeeColony(Metaheuristic):
 
         self.scouting_bees = set()  # Initially 0
 
-        self.scouting_counter = self.population_size *\
-            search.dims  # Number of dimensions
+        # Initialize bees dict
+        ids = np.arange(self.population_size)
+        bees = list(self.employed_bees | self.onlooker_bees)
+        self.bees = dict(zip(ids, bees))
 
         # Initialize best agent
         self._start_best_agent()
@@ -192,8 +194,12 @@ class ArtificialBeeColony(Metaheuristic):
         self._parameters['scouting_bees'] = scouting_bees
 
     @property
-    def bees(self):
-        return self.employed_bees | self.onlooker_bees | self.scouting_bees
+    def bees(self) -> dict[int, agents_module.Bee]:
+        return self._parameters.get('bees', None)
+
+    @bees.setter
+    def bees(self, bees: dict[int, agents_module.Bee]):
+        self._parameters['bees'] = bees
 
     @property
     def max_trials(self) -> int:
@@ -270,8 +276,9 @@ class ArtificialBeeColony(Metaheuristic):
         k_i = random.randint(0, self.search.dims - 1)
 
         # Select a random employed bee b'
-        random_bee = self.bees.copy()
-        random_bee.remove(bee)
+        random_bee = self.employed_bees.copy()
+        if bee in random_bee:
+            random_bee.remove(bee)
         random_bee = random.sample(random_bee, 1)[0]
 
         # Generate a new position for b_i in the k_i dimension
@@ -307,7 +314,7 @@ class ArtificialBeeColony(Metaheuristic):
 
     def send_onlooker(self, bee):
         selected_id = self.select_bee()
-        selected_bee = self.get_bee(selected_id, self.employed_bees)
+        selected_bee = self.get_bee(selected_id)
         bee.position = selected_bee.position.copy()
         bee.fitness = self.search.objective_function(bee.position)
 
@@ -401,13 +408,12 @@ class ArtificialBeeColony(Metaheuristic):
 
         # Return the bee with the biggest number of trials
         bee = self.get_bee(
-            mapping[-1][0],  # [0] because mapping is a list of tuples
-            bee_set=self.scouting_bees
+            mapping[-1][0]  # [0] because mapping is a list of tuples
         )
 
         return bee
 
-    def get_bee(self, id: int, bee_set) -> agents_module.Bee:
+    def get_bee(self, id: int) -> agents_module.Bee:
         """
             Get an employed bee given its id.
 
@@ -417,7 +423,7 @@ class ArtificialBeeColony(Metaheuristic):
             Returns:
                 - agents_module.Bee, bee with the given id
         """
-        return [bee for bee in bee_set if bee.id == id][0]
+        return self.bees[id]  # Get bee from the dictionary
 
     def send_scout(self, bee: agents_module.Bee):
         """
