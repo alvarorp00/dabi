@@ -3,7 +3,7 @@ import os
 
 sys.path.insert(0, os.getcwd())
 
-import src.macros as macros
+import src.config as config
 import src.utils as utils
 import src.agents as agents
 import src.synergy as synergy
@@ -26,13 +26,13 @@ def new_differential_evolution():
     differential_weight = np.random.uniform()
 
     params = {
-        'population_size': macros.population_size,
+        'population_size': config.population_size,
         'diff_weight': differential_weight,
         'crossover_rate': crossover_rate
     }
 
     de = DifferentialEvolution(
-        search=macros.search,
+        search=config.search,
         **params
     )
 
@@ -45,12 +45,12 @@ def new_artificial_bee_colony():
     """
 
     params = {
-        'population_size': macros.population_size,
-        'max_trials': macros.population_size * macros.search.dims,
+        'population_size': config.population_size,
+        'max_trials': config.population_size * config.search.dims,
     }
 
     abc = ArtificialBeeColony(
-        search=macros.search,
+        search=config.search,
         **params
     )
 
@@ -63,14 +63,14 @@ def new_particle_swarm_optimization():
     """
 
     params = {
-        'population_size': macros.population_size,
+        'population_size': config.population_size,
         'inertia': 0.5,
         'cognitive': 0.5,
         'social': 0.5,
     }
 
     pso = ParticleSwarmOptimization(
-        search=macros.search,
+        search=config.search,
         **params
     )
 
@@ -83,12 +83,12 @@ def new_particle_swarm_optimization():
 ms = [new_particle_swarm_optimization() for _ in range(0, 10)]  # 10 metaheuristics to be combined of PSO
 
 params = {
-    'runs': macros.runs,
-    'iterations': macros.iterations,
-    'convergence_criteria': macros.convergence_criteria,
+    'runs': config.runs,
+    'iterations': config.iterations,
+    'convergence_criteria': config.convergence_criteria,
 }
 
-synergy_boost = synergy.SynergyBoost(metaheuristics=ms, search=macros.search, **params)
+synergy_boost = synergy.SynergyBoost(metaheuristics=ms, search=config.search, **params)
 stats = synergy_boost.optimize()
 print(f'Best agent: {synergy_boost.best_agent} @ Fitness: {synergy_boost.best_agent.fitness} @ Position: {synergy_boost.best_agent.position}')
 
@@ -100,4 +100,4 @@ print("Stats: ", stats)
 #     'd_max': 0.5,  # maximum distance between sea and river before evaporation
 # }
 
-# wc = WaterCycleAlgorithm(search=macros.search, **params)
+# wc = WaterCycleAlgorithm(search=config.search, **params)
