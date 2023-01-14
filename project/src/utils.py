@@ -66,6 +66,22 @@ def improves(a, b, mode, adaptative=False):
     return __r
 
 
+def converged(a, b, criteria):
+    """
+        Check if a and b are close enough.
+
+        Params:
+            - a: float type, first value
+            - b: float type, second value
+            - criteria: float type, maximum difference between a and b
+
+        Returns:
+            - converged: bool type, true if a and b are close enough,
+                         false otherwise
+    """
+    return abs(a - b) <= criteria
+
+
 class SearchSpace():
     def __init__(self, lower_bound: float, upper_bound: float):
         """

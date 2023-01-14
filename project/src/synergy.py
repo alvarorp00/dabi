@@ -21,6 +21,14 @@ class SynergyBoost:
     Params:
         - metaheuristics: List[Metaheuristic], list of metaheuristics
         - search: utils.Search, search class object
+        - kwargs: dict, dictionary of parameters
+            - runs: int, number of runs to perform,
+                    namely the number of times the metaheuristics
+                    will be executed
+            - iterations: int, number of iterations to perform, namely
+                            the number of times each metaheuristic will
+                            execute per run
+            - convergence_criteria: float, convergence criteria
 
     This class assumes that all metaheuristics had initialized their
     agents and population size, and that they already have a
@@ -32,8 +40,15 @@ class SynergyBoost:
 
         self._parameters = kwargs.copy()
 
+        if 'runs' not in self._parameters:
+            logging.critical('Runs not specified')
+
         if 'iterations' not in self._parameters:
             logging.critical('Iterations not specified')
+
+        if 'convergence_criteria' not in self._parameters:
+            logging.info('Convergence criteria not specified, not using it')
+            self.convergence_criteria = 0.0
 
         # Initialize best agent with the best agent
         # among all metaheuristics
@@ -75,13 +90,54 @@ class SynergyBoost:
     def parameters(self):
         return self._parameters
 
-    def optimize(self):
-        for _ in range(self.parameters.get('iterations')):
+    @property
+    def runs(self) -> int:
+        return self.parameters.get('runs', None)
+
+    @property
+    def iterations(self) -> int:
+        return self.parameters.get('iterations', None)
+
+    @property
+    def convergence_criteria(self) -> float:
+        return self.parameters.get('convergence_criteria', None)
+
+    @convergence_criteria.setter
+    def convergence_criteria(self, convergence_criteria: float):
+        self._parameters['convergence_criteria'] = convergence_criteria
+
+    def optimize(self) -> dict[str, any]:
+        """
+        This method performs the optimization of the metaheuristics
+        and returns the best agent found.
+
+        Returns:
+            - stats: dict[str, any], dictionary with the following keys:
+                - runs: int, number of runs performed
+                - converged: bool, whether the best agent has converged
+        """
+        stats = {'runs': 0, 'converged': 'False'}
+        for _ in range(self.runs):
+            stats['runs'] += 1
+            # Extract the best agent before the optimization
+            # and check if it has improved after the optimization
+            best_agent_before = self.best_agent
             for m in self.metaheuristics:
-                if m.optimize():
-                    if utils.improves(
-                        self.best_agent.fitness,
-                        m.best_agent.fitness,
-                        self.search.mode
-                    ):
-                        self.best_agent = m.best_agent
+                for _ in range(self.iterations):
+                    # Check if the metaheuristic has improved its best agent
+                    if m.optimize():
+                        if utils.improves(
+                            self.best_agent.fitness,
+                            m.best_agent.fitness,
+                            self.search.mode
+                        ):
+                            self.best_agent = m.best_agent
+            # Check if the best agent has converged
+            if utils.converged(
+                self.best_agent.fitness,
+                best_agent_before.fitness,
+                self.convergence_criteria
+            ):
+                stats['converged'] = 'True'
+                break
+        return stats

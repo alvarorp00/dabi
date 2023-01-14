@@ -7,7 +7,9 @@ import src.macros as macros
 import src.utils as utils
 import src.agents as agents
 import src.synergy as synergy
-from src.metaheuristics import ArtificialBeeColony, DifferentialEvolution, ParticleSwarmOptimization
+from src.metaheuristics import\
+    ArtificialBeeColony, DifferentialEvolution,\
+    ParticleSwarmOptimization, WaterCycleAlgorithm
 
 
 import numpy as np
@@ -77,13 +79,25 @@ def new_particle_swarm_optimization():
 
 # ms = [new_differential_evolution() for _ in range(0, 10)]  # 10 metaheuristics to be combined of DE
 # ms = [new_differential_evolution(), new_artificial_bee_colony()]  # 2 metaheuristics to be combined of DE and ABC
-ms = [new_artificial_bee_colony() for _ in range(0, 10)]  # 10 metaheuristics to be combined of ABC
-# ms = [new_particle_swarm_optimization() for _ in range(0, 10)]  # 10 metaheuristics to be combined of PSO
+# ms = [new_artificial_bee_colony() for _ in range(0, 10)]  # 10 metaheuristics to be combined of ABC
+ms = [new_particle_swarm_optimization() for _ in range(0, 10)]  # 10 metaheuristics to be combined of PSO
 
 params = {
-    'iterations': macros.iterations
+    'runs': macros.runs,
+    'iterations': macros.iterations,
+    'convergence_criteria': macros.convergence_criteria,
 }
 
 synergy_boost = synergy.SynergyBoost(metaheuristics=ms, search=macros.search, **params)
-synergy_boost.optimize()
+stats = synergy_boost.optimize()
 print(f'Best agent: {synergy_boost.best_agent} @ Fitness: {synergy_boost.best_agent.fitness} @ Position: {synergy_boost.best_agent.position}')
+
+print("Stats: ", stats)
+
+# params = {
+#     'population_size': 30,  # 20 streams + 9 rivers + 1 sea
+#     'n_sr': 10,  # 9 rivers + 1 sea,
+#     'd_max': 0.5,  # maximum distance between sea and river before evaporation
+# }
+
+# wc = WaterCycleAlgorithm(search=macros.search, **params)

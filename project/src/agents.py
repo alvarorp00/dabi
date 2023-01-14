@@ -241,4 +241,59 @@ class Particle(Agent):
     def __hash__(self) -> int:
         return super().__hash__()
 
-####################
+#############################
+# SEA + RIVERS CLASSES      #
+#############################
+
+
+class Sea(Agent):
+    def __init__(self, id: int, position: np.ndarray, search: Search):
+        super().__init__(id, position, search)
+
+    def __str__(self):
+        return f"Sea {self.id}"
+
+    def __repr__(self) -> str:
+        return f"Sea {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."
+
+    def __eq__(self, other) -> bool:
+        return super().__eq__(other)
+
+    def __hash__(self) -> int:
+        return super().__hash__()
+
+
+class River(Agent):
+    def __init__(self, id: int, position: np.ndarray, search: Search):
+        super().__init__(id, position, search)
+
+    def __str__(self):
+        return f"Sea {self.id}"
+
+    def __repr__(self) -> str:
+        return f"Sea {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."
+
+    def __eq__(self, other) -> bool:
+        return super().__eq__(other)
+
+    def __hash__(self) -> int:
+        return super().__hash__()
+
+
+class Stream(Agent):
+    def __init__(self, id: int, position: np.ndarray, search: Search):
+        super().__init__(id, position, search)
+
+    def __str__(self):
+        return f"Sea {self.id}"
+
+    def __repr__(self) -> str:
+        return f"Sea {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."
+
+    def __eq__(self, other) -> bool:
+        return super().__eq__(other)
+
+    def __hash__(self) -> int:
+        return super().__hash__()
+
+#############################

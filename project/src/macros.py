@@ -4,8 +4,14 @@ from src.utils import EvalMode, Search, SearchSpace
 # Population
 population_size = 10
 
+# Number of runs
+runs = 10
+
 # Number of iterations
-iterations = 1000
+iterations = 100  # number of iterations per run
+
+# Convergence criteria
+convergence_criteria = 1e-6
 
 # Number of dimensions
 dimensions = 2

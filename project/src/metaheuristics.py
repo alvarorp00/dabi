@@ -128,6 +128,9 @@ class ArtificialBeeColony(Metaheuristic):
 
     Params:
         - max_trials: int, maximum number of trials without improvement
+
+    References:
+        - https://www.semanticscholar.org/paper/AN-IDEA-BASED-ON-HONEY-BEE-SWARM-FOR-NUMERICAL-Karaboga/cf20e34a1402a115523910d2a4243929f6704db1  # noqa: E501
     """
 
     def __init__(self, search: utils.Search, *args, **kwargs):
@@ -450,11 +453,139 @@ class ArtificialBeeColony(Metaheuristic):
 
 
 class WaterCycleAlgorithm(Metaheuristic):
+    """
+        Water Cycle Algorithm
+
+        Params:
+            - kwargs: dict, dictionary of parameters
+                - n_sr: int, sum of rivers & seas, namely
+                        the number of rivers + 1 (sea)
+                - d_max: float, maximum distance between sea
+                            and rivers before evaporation occurs
+
+        References:
+            - https://arxiv.org/pdf/1909.08800.pdf
+
+        Notes:
+            - From the total population of size N:
+                - 1 sea
+                - Nrs - 1 rivers
+                - N - Nrs streams
+    """
     def __init__(self, search: utils.Search, *args, **kwargs):
         super().__init__(search, *args, **kwargs)
-        # specific initialization code for the Water Cycle Algorithm
-        # goes here
-        pass
+
+        # Check specific parameters
+        if 'n_sr' not in kwargs:
+            logging.critical(
+                "Missing parameter 'n_sr' (sum of rivers & seas) "
+                "for Water Cycle Algorithm"
+            )
+        elif self.n_sr >= self.population_size:
+            logging.critical(
+                "The number of rivers & seas must be less than the "
+                "population size"
+            )
+
+        # Create the sea
+        self.sea = agents_module.Sea(
+            id=0,
+            position=self.search.space.random_bounded(dims=self.search.dims),
+            search=self.search
+        )
+
+        # Create the rivers
+        self.rivers = [
+            agents_module.River(
+                id=i,
+                position=self.search.space.random_bounded(
+                    dims=self.search.dims
+                ),
+                search=self.search
+            )
+            for i in range(1, self.n_r + 1)
+        ]
+
+        # Create the streams
+        self.streams = [
+            agents_module.Stream(
+                id=i,
+                position=self.search.space.random_bounded(
+                    dims=self.search.dims
+                ),
+                search=self.search
+            )
+            for i in range(self.n_r + 1, self.n_r + self.n_st + 1)
+        ]
+
+        # DEBUG
+        # assert len(self.rivers) +\
+        #   len(self.streams) + 1 == self.population_size
+        # END DEBUG
+
+    @property
+    def sea(self) -> agents_module.Sea:
+        return self._sea
+
+    @sea.setter
+    def sea(self, sea: agents_module.Sea):
+        self._sea = sea
+
+    @property
+    def rivers(self) -> List[agents_module.River]:
+        return self._rivers
+
+    @rivers.setter
+    def rivers(self, rivers: List[agents_module.River]):
+        self._rivers = rivers
+
+    @property
+    def streams(self) -> List[agents_module.Stream]:
+        return self._streams
+
+    @streams.setter
+    def streams(self, streams: List[agents_module.Stream]):
+        self._streams = streams
+
+    @property
+    def n_sr(self) -> int:
+        """
+            Get the sum of rivers & seas, namely the number of rivers + 1 (sea)
+        """
+        return self._parameters.get('n_sr', None)
+
+    @property
+    def n_s(self) -> int:
+        """
+            Get the number of seas, namely 1
+        """
+        return 1
+
+    @property
+    def n_r(self) -> int:
+        """
+            Get the number of rivers, namely n_sr - 1
+        """
+        return self.n_sr - self.n_s
+
+    @property
+    def n_st(self) -> int:
+        """
+            Get the number of streams, namely population_size - n_sr
+        """
+        return self.population_size - self.n_sr
+
+    @n_st.setter
+    def n_st(self, n_st: int):
+        self._parameters['n_st'] = n_st
+
+    @property
+    def agents(self):
+        return self.rivers + self.streams + [self.sea]
+
+    @property  # override
+    def best_agent(self):
+        return self.sea  # The sea is the best agent
 
     def optimize(self):
         # specific code for optimizing an objective function using
@@ -470,6 +601,19 @@ class WaterCycleAlgorithm(Metaheuristic):
 
 
 class ParticleSwarmOptimization(Metaheuristic):
+    """
+        Particle Swarm Optimization
+
+        Params:
+            - kwargs: dict, dictionary of parameters for the metaheuristic
+                - inertia: float, inertia of the particles
+                - cognitive: float, cognitive parameter of the particles
+                - social: float, social parameter of the particles
+
+        References:
+            - https://ieeexplore.ieee.org/document/488968
+            - https://ieeexplore.ieee.org/document/699146
+    """
     def __init__(self, search: utils.Search, *args, **kwargs):
         super().__init__(search, *args, **kwargs)
 
@@ -579,11 +723,15 @@ class ParticleSwarmOptimization(Metaheuristic):
 class DifferentialEvolution(Metaheuristic):
     """
     Differential Evolution metaheuristic.
+
     Params:
         - search: Search type, search object
         - kwargs:
             - crossover_rate: float, crossover rate
             - diff_weight: float, differential weight
+
+    References:
+        - https://link.springer.com/book/10.1007/3-540-31306-0
     """
     def __init__(self, search: utils.Search, *args, **kwargs):
         super().__init__(search, *args, **kwargs)
