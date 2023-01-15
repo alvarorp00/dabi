@@ -1,3 +1,4 @@
+from typing import List
 from src.utils import EvalMode, Search, SearchSpace, improves
 import numpy as np
 
@@ -19,7 +20,11 @@ class Agent():
     Agent's best fitness is the result of applying the objective function
     to the best position, so we store it to avoid unnecessary computations.
     """
-    def __init__(self, id: int, position: np.ndarray, search: Search):
+    def __init__(self,
+                 id: int,
+                 position: np.ndarray,
+                 search: Search,
+                 **kwargs):
         """
         Creates an Agent object. Best position and fitness are initialized to
         the given position and fitness.
@@ -37,10 +42,23 @@ class Agent():
         self._best_fitness = self.fitness
         self._search_space = search.space
         self._objective_function = search.objective_function
+        self._owner = kwargs.get('owner', None)
 
     @property
     def id(self) -> int:
         return self._id
+
+    @id.setter
+    def id(self, id: int):
+        self._id = id
+
+    @property
+    def owner(self) -> str:
+        return self._owner
+
+    @owner.setter
+    def owner(self, owner: str):
+        self._owner = owner
 
     @property
     def position(self) -> np.ndarray:
@@ -147,8 +165,8 @@ class Agent():
 
 
 class Bee(Agent):
-    def __init__(self, id: int, position: np.ndarray, search: Search):
-        super().__init__(id, position, search)
+    def __init__(self, id: int, position: np.ndarray, search: Search, **kwargs):
+        super().__init__(id, position, search, **kwargs)
         self._trials = 0
 
     @property
@@ -183,8 +201,8 @@ class Particle(Agent):
                  position:
                  np.ndarray,
                  search: Search,
-                 velocity: np.ndarray = None
-                 ):
+                 velocity: np.ndarray = None,
+                 **kwargs):
         """
         Creates a Particle object.
 
@@ -197,7 +215,7 @@ class Particle(Agent):
 
         Default velocity is zero.
         """
-        super().__init__(id, position, search)
+        super().__init__(id, position, search, **kwargs)
         self._velocity = velocity
         self._best_velocity = velocity
 
@@ -246,49 +264,34 @@ class Particle(Agent):
 #############################
 
 
-class Sea(Agent):
-    def __init__(self, id: int, position: np.ndarray, search: Search):
-        super().__init__(id, position, search)
-
-    def __str__(self):
-        return f"Sea {self.id}"
-
-    def __repr__(self) -> str:
-        return f"Sea {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."
-
-    def __eq__(self, other) -> bool:
-        return super().__eq__(other)
-
-    def __hash__(self) -> int:
-        return super().__hash__()
-
-
 class River(Agent):
-    def __init__(self, id: int, position: np.ndarray, search: Search):
-        super().__init__(id, position, search)
+    def __init__(self, id: int, position: np.ndarray,
+                 search: Search, **kwargs):
+        super().__init__(id, position, search, **kwargs)
+        self._river_id = None
+
+    @property
+    def river_id(self) -> 'River':
+        """
+            Returns the river towards the stream is
+            flowing, just if the river itself is a stream
+        """
+        return self._river_id
+
+    @river_id.setter
+    def river_id(self, river_id: 'River'):
+        """
+            Sets the river towards the stream is
+            flowing, just if the river itself is a stream
+        """
+        self._river_id = river_id
 
     def __str__(self):
-        return f"Sea {self.id}"
+        return f"River {self.id}"
 
     def __repr__(self) -> str:
-        return f"Sea {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."
-
-    def __eq__(self, other) -> bool:
-        return super().__eq__(other)
-
-    def __hash__(self) -> int:
-        return super().__hash__()
-
-
-class Stream(Agent):
-    def __init__(self, id: int, position: np.ndarray, search: Search):
-        super().__init__(id, position, search)
-
-    def __str__(self):
-        return f"Sea {self.id}"
-
-    def __repr__(self) -> str:
-        return f"Sea {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."
+        return f"River {self.id} at {self.position} "\
+               f"with fitness {self.fitness}. \n"
 
     def __eq__(self, other) -> bool:
         return super().__eq__(other)

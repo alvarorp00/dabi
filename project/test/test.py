@@ -77,10 +77,27 @@ def new_particle_swarm_optimization():
     return pso
 
 
-# ms = [new_differential_evolution() for _ in range(0, 10)]  # 10 metaheuristics to be combined of DE
-# ms = [new_differential_evolution(), new_artificial_bee_colony()]  # 2 metaheuristics to be combined of DE and ABC
-# ms = [new_artificial_bee_colony() for _ in range(0, 10)]  # 10 metaheuristics to be combined of ABC
-ms = [new_particle_swarm_optimization() for _ in range(0, 10)]  # 10 metaheuristics to be combined of PSO
+def new_water_cycle_algorithm():
+    """
+    Instantiates a new Water Cycle Algorithm.
+    """
+
+    params = {
+        'population_size': 30,  # 20 streams + 9 rivers + 1 sea
+        'n_sr': 5,  # 9 rivers + 1 sea,
+        'd_max': 0.5,  # maximum distance between sea and river before evaporation
+        'd_max_decay': 1e-3,  # decay rate of d_max  --> d_max_{t+1} = d_max_{t} - d_max_decay
+    }
+
+    wca = WaterCycleAlgorithm(search=config.search, **params)
+
+    return wca
+
+############################################
+# MAIN                                     #
+############################################
+
+ms = [new_differential_evolution(), new_artificial_bee_colony(), new_particle_swarm_optimization(), new_water_cycle_algorithm()]
 
 params = {
     'runs': config.runs,
@@ -92,12 +109,17 @@ synergy_boost = synergy.SynergyBoost(metaheuristics=ms, search=config.search, **
 stats = synergy_boost.optimize()
 print(f'Best agent: {synergy_boost.best_agent} @ Fitness: {synergy_boost.best_agent.fitness} @ Position: {synergy_boost.best_agent.position}')
 
-print("Stats: ", stats)
+print("#################\nStats\n#################")
 
-# params = {
-#     'population_size': 30,  # 20 streams + 9 rivers + 1 sea
-#     'n_sr': 10,  # 9 rivers + 1 sea,
-#     'd_max': 0.5,  # maximum distance between sea and river before evaporation
-# }
+print("Runs: ", stats["runs"])
+print("Converged: ", stats["converged"])
 
-# wc = WaterCycleAlgorithm(search=config.search, **params)
+# print("Trace:")
+
+# for i in range(0, len(stats["trace"])):
+#     print(f'{stats["trace"][i]} @ {stats["trace"][i].owner} @ fitness: {stats["trace"][i].fitness} @ position: {stats["trace"][i].position}')
+
+print("#################\nTrace\n#################")
+
+for trace in stats["trace"].trace:
+    print(trace)

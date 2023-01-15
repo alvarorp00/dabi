@@ -5,7 +5,7 @@ from src.utils import EvalMode, Search, SearchSpace
 population_size = 10
 
 # Number of runs
-runs = 10
+runs = 100
 
 # Number of iterations
 iterations = 100  # number of iterations per run
@@ -14,13 +14,13 @@ iterations = 100  # number of iterations per run
 convergence_criteria = 1e-6
 
 # Number of dimensions
-dimensions = 2
+dimensions = 4
 
 # Lower bound
-lower_bound = -5.12
+lower_bound = -5.12 * 1e2
 
 # Upper bound
-upper_bound = +5.12
+upper_bound = +5.12 * 1e2
 
 # Target function
 target_function = rastrigin

@@ -115,15 +115,16 @@ class SynergyBoost:
             - stats: dict[str, any], dictionary with the following keys:
                 - runs: int, number of runs performed
                 - converged: bool, whether the best agent has converged
+                - trace: List[agents.Agent], list of best agents found
         """
-        stats = {'runs': 0, 'converged': 'False'}
-        for _ in range(self.runs):
+        stats = {'runs': 0, 'converged': 'False', 'trace': utils.Trace()}
+        for run in range(self.runs):
             stats['runs'] += 1
             # Extract the best agent before the optimization
             # and check if it has improved after the optimization
             best_agent_before = self.best_agent
             for m in self.metaheuristics:
-                for _ in range(self.iterations):
+                for iteration in range(self.iterations):
                     # Check if the metaheuristic has improved its best agent
                     if m.optimize():
                         if utils.improves(
@@ -132,6 +133,15 @@ class SynergyBoost:
                             self.search.mode
                         ):
                             self.best_agent = m.best_agent
+                            # Add to trace the best fitness found
+                            stats['trace'].add(
+                                self.best_agent,
+                                iteration,
+                                run
+                            )
+                            # Update the best fitness of all metaheuristics
+                            for m in self.metaheuristics:
+                                m.update_parameters(best_agent=self.best_agent)
             # Check if the best agent has converged
             if utils.converged(
                 self.best_agent.fitness,

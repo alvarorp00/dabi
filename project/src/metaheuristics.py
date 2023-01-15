@@ -17,7 +17,6 @@ class Metaheuristic(ABC):
                 - search: Search type, search object
                 - kwargs:
                     - population_size: int, size of the population
-                    - max_trials: int, maximum number of trials without improvement  # noqa: E501
 
             This class is an abstract class, it must be inherited
         """
@@ -28,27 +27,31 @@ class Metaheuristic(ABC):
         if 'population_size' not in self._parameters:
             logging.critical('Population size not specified')
 
-    def _start_best_agent(self):
+    def _start_best_agent(self, population: List[agents_module.Agent] = None):
         """
             Start the best agent candidate among all agents
             in the population.
 
-            This method is called just after the agents have been
-            initialized, after running super().__init__() in the
-            constructor of the child class, and before the
-            optimization process starts (just before leaving the
-            __init__() method in the child class).
+            This method must be called during the __init__ method
+            of the child class, after the population is created.
+
+            Params:
+                - population: list of agents, population of agents;
+                                if None, the population is taken from
+                                self.agents
         """
+        if population is None:
+            population = self.agents
         # Select best agent among all agents
         if self.search.mode == utils.EvalMode.MINIMIZE:
             __a_idx = np.argmin(
-                    [a.best_fitness for a in self.agents]
+                    [a.best_fitness for a in population]
                 )
         else:
             __a_idx = np.argmax(
-                    [a.best_fitness for a in self.agents]
+                    [a.best_fitness for a in population]
                 )
-        self.best_agent = copy.deepcopy(self.agents[__a_idx])
+        self.best_agent = copy.deepcopy(population[__a_idx])
 
     @property
     def search(self) -> utils.Search:
@@ -75,19 +78,7 @@ class Metaheuristic(ABC):
         return self._parameters.get('population_size', None)
 
     @property
-    def max_trials(self) -> int:
-        return self._parameters.get('max_trials', None)
-
-    @max_trials.setter
-    def max_trials(self, max_trials: int):
-        self._parameters['max_trials'] = max_trials
-
-    @property
-    def use_max_trials(self) -> bool:
-        return self._parameters.get('use_max_trials', False)
-
-    @property
-    def best_agent(self):
+    def best_agent(self) -> agents_module.Agent:
         return self._parameters.get('best_agent', None)
 
     @best_agent.setter
@@ -98,6 +89,13 @@ class Metaheuristic(ABC):
                 - best_agent: agents_module.Agent, best agent found so far
         """
         self._parameters['best_agent'] = best_agent
+
+    @property
+    def name(self):
+        if 'name' in self._parameters:
+            return self._parameters['name']
+        else:
+            return self.__class__.__name__
 
     @abstractmethod
     def optimize(self) -> bool:
@@ -110,13 +108,48 @@ class Metaheuristic(ABC):
         # goes here, this is an abstract method
         pass
 
-    @abstractmethod
     def update_parameters(self, **kwargs):
-        # Update parameters of the metaheuristic
-        # Maybe sharing agents between metaheuristics is a good idea,
-        # together with their positions and fitnesses, etc
-        # Code goes here, this is an abstract method
-        pass
+        """
+            Update parameters of the metaheuristic.
+
+            Any child class can override this method and do its
+            own parameter update. This method will update only the
+            common parameters.
+
+            Currently only supports best agent update,
+            but it can be extended to support other parameters.
+
+            Params:
+                - kwargs: dict, parameters to update
+                    - best_agent: agents_module.Agent, best agent found so far
+        """
+
+        # Update best agent
+        if 'best_agent' in kwargs:
+            self.best_agent.position = kwargs['best_agent'].position
+            self.best_agent.fitness = kwargs['best_agent'].fitness
+
+    @staticmethod
+    def sort_population(population: List[agents_module.Agent],
+                        mode: utils.EvalMode):
+        """
+            Sort population by fitness, in ascending order if
+            the search mode is MINIMIZE, in descending order
+            if the search mode is MAXIMIZE.
+
+            Params:
+                - population: list of agents, population of agents
+
+            Returns:
+                - list of agents, sorted population
+        """
+        # If the goal is to maximize, reverse the mapping
+        reverse = mode == utils.EvalMode.MAXIMIZE
+
+        # Sort rs set by fitness in ascending order
+        return sorted(
+            population, key=lambda river: river.fitness, reverse=reverse
+        )
 
     def __str__(self):
         return self.__class__.__name__
@@ -147,7 +180,8 @@ class ArtificialBeeColony(Metaheuristic):
                 agents_module.Bee(
                     i,
                     search.space.random_bounded(search.dims),
-                    search
+                    search,
+                    owner=self.name
                 ) for i in range(self.population_size // 2)
             ]  # Half of the bees are employed bees
         )
@@ -157,7 +191,8 @@ class ArtificialBeeColony(Metaheuristic):
                 agents_module.Bee(
                     i + self.population_size // 2,  # do not overlap ids
                     np.zeros(search.dims),  # Updated later in the algorithm
-                    search
+                    search,
+                    owner=self.name
                 ) for i in range(self.population_size // 2)
             ]  # Half of the bees are onlooker_bees
         )
@@ -387,8 +422,6 @@ class ArtificialBeeColony(Metaheuristic):
         # Get a random bee given previous probabilities
         selected_id = np.random.choice(ids, p=probs)
 
-        # print("id_selected: ", selected_id)
-
         return selected_id
 
     def biggest_trial_bee(self) -> agents_module.Bee:
@@ -487,64 +520,115 @@ class WaterCycleAlgorithm(Metaheuristic):
                 "population size"
             )
 
-        # Create the sea
-        self.sea = agents_module.Sea(
-            id=0,
-            position=self.search.space.random_bounded(dims=self.search.dims),
-            search=self.search
+        if 'd_max' not in kwargs:
+            logging.critical(
+                "Missing parameter 'd_max' (maximum distance between sea "
+                "and rivers before evaporation occurs) for Water Cycle "
+                "Algorithm"
+            )
+
+        if 'd_max_decay' not in kwargs:
+            logging.critical("Missing parameter 'd_max_decay' for Water Cycle ")
+
+        if 'c_constant' not in kwargs:
+            logging.info("Using random value for 'c_constant' parameter [>1,"
+                         "best 1 < c < 2]")
+            self._parameters['c_constant'] = 2
+
+        # Create agents, namely rivers, streams and sea
+        population = [
+            agents_module.River(
+                i,
+                self.search.space.random_bounded(dims=self.search.dims),
+                self.search,
+                owner=self.name
+            ) for i in range(0, self.population_size)
+        ]
+
+        # # This will set the sea automatically
+        # self._start_best_agent(population=population)
+
+        # rs = set(population) - set([self.sea])  # Rivers & streams
+
+        population = Metaheuristic.sort_population(
+            population=population,
+            mode=self.search.mode
         )
 
-        # Create the rivers
-        self.rivers = [
-            agents_module.River(
-                id=i,
-                position=self.search.space.random_bounded(
-                    dims=self.search.dims
-                ),
-                search=self.search
-            )
-            for i in range(1, self.n_r + 1)
-        ]
+        self.sea = population[0]
 
-        # Create the streams
-        self.streams = [
-            agents_module.Stream(
-                id=i,
-                position=self.search.space.random_bounded(
-                    dims=self.search.dims
-                ),
-                search=self.search
-            )
-            for i in range(self.n_r + 1, self.n_r + self.n_st + 1)
-        ]
+        # Set rivers
+        rivers = population[1:self.n_sr]
+        self.rivers = dict(zip(
+            [r.id for r in rivers],
+            rivers
+        ))
 
-        # DEBUG
-        # assert len(self.rivers) +\
-        #   len(self.streams) + 1 == self.population_size
-        # END DEBUG
+        # Set streams
+        streams = population[self.n_sr:]
+        self.streams = dict(zip(
+            [s.id for s in streams],
+            streams
+        ))
+
+        sea_and_rivers = population[:self.n_sr]
+        ns_n = []  # Number of streams for each river (and sea)
+        costs_n = np.array([
+            r.fitness
+            for r in sea_and_rivers
+        ])
+
+        ns_n = []
+        for i in range(0, self.n_sr):
+            ns_i = int(np.round(
+                np.abs(costs_n[i] / np.sum(np.abs(costs_n))) * self.n_st
+            ))
+            ns_n.append(ns_i)
+
+        if np.sum(ns_n) < self.n_st:
+            ns_n[np.random.randint(0, len(ns_n))] += self.n_st - np.sum(ns_n)
+
+        pending_of_assignment = np.array(list(self.streams.keys()))
+
+        for i in range(0, self.n_sr - 1):
+            selected = np.random.choice(
+                pending_of_assignment,
+                size=ns_n[i],
+                replace=False
+            )
+            pending_of_assignment = np.setdiff1d(
+                pending_of_assignment,
+                selected
+            )
+            for s in selected:
+                self.streams[s].river_id = sea_and_rivers[i].id
+        # Assign the remaining streams to the last river
+        for s in pending_of_assignment:
+            self.streams[s].river_id = sea_and_rivers[-1].id
+            # sea_and_rivers[-1].add_affluent(self.streams[s])
 
     @property
-    def sea(self) -> agents_module.Sea:
+    def sea(self) -> agents_module.River:
         return self._sea
 
     @sea.setter
-    def sea(self, sea: agents_module.Sea):
+    def sea(self, sea: agents_module.River):
         self._sea = sea
 
     @property
-    def rivers(self) -> List[agents_module.River]:
+    def rivers(self) -> dict[int, agents_module.River]:
         return self._rivers
 
     @rivers.setter
-    def rivers(self, rivers: List[agents_module.River]):
+    def rivers(self, rivers: dict[int, agents_module.River]):
         self._rivers = rivers
 
     @property
-    def streams(self) -> List[agents_module.Stream]:
+    def streams(self) -> dict[int, agents_module.River]:
         return self._streams
 
     @streams.setter
-    def streams(self, streams: List[agents_module.Stream]):
+    def streams(self, streams: dict[int, agents_module.River]):
         self._streams = streams
 
     @property
@@ -580,17 +664,157 @@ class WaterCycleAlgorithm(Metaheuristic):
         self._parameters['n_st'] = n_st
 
     @property
-    def agents(self):
-        return self.rivers + self.streams + [self.sea]
+    def d_max(self) -> float:
+        """
+            Get the maximum distance between sea and rivers before evaporation
+            occurs
+        """
+        return self._parameters.get('d_max', None)
+
+    @d_max.setter
+    def d_max(self, d_max: float):
+        self._parameters['d_max'] = d_max
+
+    @property
+    def d_max_decay(self) -> float:
+        """
+            Get the maximum distance between sea and rivers before evaporation
+            occurs
+        """
+        return self._parameters.get('d_max_decay', None)
+
+    @property
+    def c_constant(self) -> float:
+        """
+            Get the constant c for the distance formula
+        """
+        return self._parameters.get('c_constant', None)
+
+    @property
+    def agents(self) -> list[agents_module.Agent]:
+        return [self.sea] + \
+            list(self.rivers.values()) +\
+            list(self.streams.values())
 
     @property  # override
     def best_agent(self):
         return self.sea  # The sea is the best agent
 
+    @best_agent.setter  # override
+    def best_agent(self, agent: agents_module.River):
+        self.sea = agent
+
+    def get_river(self, river_id: int) -> agents_module.River:
+        if river_id == self.sea.id:
+            return self.sea
+        else:
+            return self.rivers.get(river_id, None)
+
     def optimize(self):
-        # specific code for optimizing an objective function using
-        # the Water Cycle Algorithm goes here
-        pass
+        for _, stream in self.streams.items():
+            river = self.get_river(stream.river_id)
+            # Stream flows to its corresponding river and sea (Eqs. 16,17)
+            next_position = stream.position + \
+                np.random.uniform(0, 1) *\
+                self.c_constant *\
+                (river.position - stream.position)
+            # Assign and fix the next position
+            stream.position = self.search.space.fix_position(next_position)
+            # Compare the stream with its river (or sea if it is the case)
+
+            if utils.improves(
+                river.fitness,
+                stream.fitness,
+                self.search.mode
+            ):
+                # Stream flows to its river
+                river.position = stream.position
+                river.fitness = stream.fitness
+
+                # Compare the river with its sea
+                if utils.improves(
+                    self.sea.fitness,
+                    stream.fitness,
+                    self.search.mode
+                ):
+                    # River flows to the sea
+                    self.sea.position = river.position
+                    self.sea.fitness = river.fitness
+
+            # River flows to its sea (Eq. 18)
+            next_position = river.position + \
+                np.random.uniform(0, 1) *\
+                self.c_constant *\
+                (self.sea.position - river.position)
+            # Assign and fix the next position
+            river.position = self.search.space.fix_position(next_position)
+            # Compare the river with its sea
+            if utils.improves(
+                self.sea.fitness,
+                river.fitness,
+                self.search.mode
+            ):
+                # River flows to the sea
+                self.sea.position = river.position
+                self.sea.fitness = river.fitness
+
+        # Evaporation  --> raining process
+        for _, river in self.rivers.items():
+            if np.linalg.norm(river.position - self.sea.position) < self.d_max\
+                    or np.random.uniform(0, 1) < 1e-1:
+                # Create a new stream
+                new_position =\
+                    self.search.space.random_bounded(self.search.dims)
+                stream = agents_module.River(
+                    id=river.id,
+                    position=new_position,
+                    search=self.search,
+                    owner=self.name
+                )
+
+                # Add the stream to the streams
+                self.streams[stream.id] = stream
+
+                # Get the best stream (including the newly created one)
+                best_stream = Metaheuristic.sort_population(
+                    list(self.streams.values()),
+                    self.search.mode
+                )[0]
+
+                # Swap ids of the best stream and the new stream
+                best_stream.id, stream.id = stream.id, best_stream.id
+                """
+                    This is a bit tricky, but it is necessary to swap the ids
+                    of the best stream and the new stream, because the best
+                    stream is now a river and all the streams that were
+                    flowing to it must flow to the new river
+                """
+
+                if best_stream.id != stream.id:
+                    # new stream flows to best_stream
+                    stream.river_id = best_stream.id
+
+                # best_stream flows to the sea
+                best_stream.river_id = self.sea.id
+
+                # Remove the best stream from the streams
+                self.streams.pop(best_stream.id)
+
+                # The best stream replaces the river
+                self.rivers[best_stream.id] = best_stream
+
+                # Compare the river with its sea
+                if utils.improves(
+                    self.sea.fitness,
+                    best_stream.fitness,
+                    self.search.mode
+                ):
+                    # River flows to the sea
+                    self.sea.position = best_stream.position
+                    self.sea.fitness = best_stream.fitness
+
+        # Reduce the d_max parameter
+        self.d_max = self.d_max - self.d_max_decay
 
     def update_parameters(self, **kwargs):
         # Update parameters of the metaheuristic
@@ -638,6 +862,7 @@ class ParticleSwarmOptimization(Metaheuristic):
                 position=self.search.space.random_bounded(search.dims),
                 search=self.search,
                 velocity=np.zeros(self.search.dims),
+                owner=self.name
             ) for i in range(self.population_size)
         ]
 
@@ -747,7 +972,8 @@ class DifferentialEvolution(Metaheuristic):
             agents_module.Agent(
                 i,
                 search.space.random_bounded(search.dims),
-                search
+                search,
+                owner=self.name
             ) for i in range(self.population_size)
         ]
 

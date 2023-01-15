@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List
 import numpy as np
 
 ####################
@@ -178,3 +179,42 @@ class Search():
     @property
     def dims(self) -> int:
         return self._dims
+
+
+# Trace class
+
+class Trace:
+    """
+        Trace class. Stores the trace of an agent.
+
+        Attributes:
+            - trace: list of dicts, each dict contains the following keys:
+                - iteration: integer, iteration number
+                - run: integer, run number
+                - position: np.ndarray type, position of the agent
+                - fitness: float type, fitness of the agent
+    """
+    def __init__(self, *args, **kwargs) -> None:
+        self._trace = []
+
+    @property
+    def trace(self) -> dict:
+        return self._trace
+
+    def add(self, agent, iteration, run):
+        """
+        Adds a new trace to the trace list.
+
+        Params:
+            - agent: Agent type, agent whose trace is going to be added
+            - iteration: integer, iteration number
+            - run: integer, run number
+        """
+        self._trace.append({
+            'name': str(agent),
+            'iteration': iteration,
+            'run': run,
+            'position': agent.position,
+            'fitness': agent.fitness,
+            'owner': agent.owner,
+        })
