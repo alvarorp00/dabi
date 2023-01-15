@@ -87,9 +87,12 @@ class Metaheuristic(ABC):
             Set the best agent found so far.
             Params:
                 - best_agent: agents_module.Agent, best agent found so far
+
+            Don't call this method from an outer instance, as some important
+            information could be lost. Instead, call the update_parameters
+            instead.
         """
         self._parameters['best_agent'] = best_agent
-
     @property
     def name(self):
         if 'name' in self._parameters:
@@ -710,7 +713,7 @@ class WaterCycleAlgorithm(Metaheuristic):
         else:
             return self.rivers.get(river_id, None)
 
-    def optimize(self):
+    def optimize(self) -> bool:
         for _, stream in self.streams.items():
             river = self.get_river(stream.river_id)
             # Stream flows to its corresponding river and sea (Eqs. 16,17)
@@ -893,7 +896,7 @@ class ParticleSwarmOptimization(Metaheuristic):
     def agents(self):
         return self.particles  # For compatibility with other metaheuristics
 
-    def optimize(self):
+    def optimize(self) -> bool:
         update = False
         for particle in self.particles:
             particle.update_velocity(
@@ -988,7 +991,7 @@ class DifferentialEvolution(Metaheuristic):
     def diff_weight(self) -> float:
         return self.parameters.get('diff_weight', None)
 
-    def optimize(self):
+    def optimize(self) -> bool:
         """
         Performs a single iteration of the Differential Evolution algorithm.
         """

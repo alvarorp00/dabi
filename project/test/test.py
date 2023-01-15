@@ -122,4 +122,5 @@ print("Converged: ", stats["converged"])
 print("#################\nTrace\n#################")
 
 for trace in stats["trace"].trace:
-    print(trace)
+    # print(trace)
+    print(f"trace @ {trace['name']}:{trace['owner']} @ fitness: {trace['fitness']} @ run: {trace['run']} @ iteration: {trace['iteration']}")

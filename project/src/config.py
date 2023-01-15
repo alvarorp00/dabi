@@ -11,7 +11,7 @@ runs = 100
 iterations = 100  # number of iterations per run
 
 # Convergence criteria
-convergence_criteria = 1e-6
+convergence_criteria = 1e-12
 
 # Number of dimensions
 dimensions = 4

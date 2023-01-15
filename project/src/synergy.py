@@ -62,6 +62,10 @@ class SynergyBoost:
                 )
         self.best_agent = self.metaheuristics[__m_idx].best_agent
 
+        # Update best agent of each metaheuristic
+        for m in self.metaheuristics:
+            m.update_parameters(best_agent=self.best_agent)
+
     @property
     def metaheuristics(self):
         return self._metaheuristics
