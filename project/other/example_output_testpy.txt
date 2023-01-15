@@ -1,0 +1,80 @@
+❯ python3 test/test.py
+Best agent: Agent 9 @ Fitness: -29.99999999976875 @ Position: [-7.65491620e-07 -3.58631916e-07 -3.08815435e-07 -5.96363579e-07]
+#################
+Stats
+#################
+Runs:  60
+Converged:  True
+#################
+Trace
+#################
+trace @ Agent 0:DifferentialEvolution @ fitness: 33343.797959067924 @ run: 0 @ iteration: 6
+trace @ Bee 0:ArtificialBeeColony @ fitness: 27908.39993734635 @ run: 0 @ iteration: 16
+trace @ Particle 4:ParticleSwarmOptimization @ fitness: 22370.859782740998 @ run: 0 @ iteration: 1
+trace @ Agent 7:DifferentialEvolution @ fitness: 17095.850900678975 @ run: 1 @ iteration: 3
+trace @ Bee 0:ArtificialBeeColony @ fitness: 15686.39137966299 @ run: 1 @ iteration: 0
+trace @ Particle 6:ParticleSwarmOptimization @ fitness: 6483.73160633333 @ run: 1 @ iteration: 0
+trace @ Agent 4:DifferentialEvolution @ fitness: 4208.946003321878 @ run: 2 @ iteration: 15
+trace @ Bee 0:ArtificialBeeColony @ fitness: 3310.92434269657 @ run: 2 @ iteration: 1
+trace @ Particle 0:ParticleSwarmOptimization @ fitness: 2694.535102431389 @ run: 2 @ iteration: 5
+trace @ Agent 4:DifferentialEvolution @ fitness: 2017.9999179666902 @ run: 3 @ iteration: 0
+trace @ Bee 6:ArtificialBeeColony @ fitness: 1347.655304615136 @ run: 3 @ iteration: 4
+trace @ Particle 3:ParticleSwarmOptimization @ fitness: 1335.0696576864825 @ run: 3 @ iteration: 6
+trace @ Agent 5:DifferentialEvolution @ fitness: 607.961298315842 @ run: 4 @ iteration: 10
+trace @ Bee 0:ArtificialBeeColony @ fitness: 425.9570328746076 @ run: 4 @ iteration: 13
+trace @ Agent 4:DifferentialEvolution @ fitness: 287.4454741250223 @ run: 5 @ iteration: 3
+trace @ Bee 5:ArtificialBeeColony @ fitness: 10.056842849228273 @ run: 5 @ iteration: 5
+trace @ Agent 2:DifferentialEvolution @ fitness: -6.7126766785709195 @ run: 6 @ iteration: 26
+trace @ Agent 1:DifferentialEvolution @ fitness: -12.110290852657188 @ run: 7 @ iteration: 9
+trace @ Agent 2:DifferentialEvolution @ fitness: -12.169042733268286 @ run: 8 @ iteration: 1
+trace @ Agent 2:DifferentialEvolution @ fitness: -19.8939399819833 @ run: 9 @ iteration: 0
+trace @ Agent 2:DifferentialEvolution @ fitness: -27.670182245665544 @ run: 10 @ iteration: 0
+trace @ Agent 2:DifferentialEvolution @ fitness: -27.754567344497158 @ run: 11 @ iteration: 34
+trace @ Agent 6:DifferentialEvolution @ fitness: -28.119298255751414 @ run: 12 @ iteration: 2
+trace @ Agent 6:DifferentialEvolution @ fitness: -28.80963437931422 @ run: 13 @ iteration: 5
+trace @ Agent 2:DifferentialEvolution @ fitness: -29.41502746406893 @ run: 14 @ iteration: 6
+trace @ Agent 6:DifferentialEvolution @ fitness: -29.760888178933385 @ run: 15 @ iteration: 14
+trace @ Agent 7:DifferentialEvolution @ fitness: -29.790661230155667 @ run: 16 @ iteration: 2
+trace @ Agent 6:DifferentialEvolution @ fitness: -29.925684086306557 @ run: 17 @ iteration: 0
+trace @ Agent 0:DifferentialEvolution @ fitness: -29.953854820442718 @ run: 18 @ iteration: 5
+trace @ Agent 0:DifferentialEvolution @ fitness: -29.980627109021636 @ run: 19 @ iteration: 3
+trace @ Agent 0:DifferentialEvolution @ fitness: -29.980935105913797 @ run: 20 @ iteration: 1
+trace @ Agent 0:DifferentialEvolution @ fitness: -29.983364030636622 @ run: 21 @ iteration: 7
+trace @ Agent 6:DifferentialEvolution @ fitness: -29.98819776368557 @ run: 22 @ iteration: 1
+trace @ Agent 6:DifferentialEvolution @ fitness: -29.995122361225455 @ run: 23 @ iteration: 0
+trace @ Agent 2:DifferentialEvolution @ fitness: -29.995883385717427 @ run: 24 @ iteration: 2
+trace @ Agent 3:DifferentialEvolution @ fitness: -29.997395622191416 @ run: 25 @ iteration: 1
+trace @ Agent 2:DifferentialEvolution @ fitness: -29.997440170112135 @ run: 26 @ iteration: 1
+trace @ Agent 0:DifferentialEvolution @ fitness: -29.998018090149564 @ run: 27 @ iteration: 2
+trace @ Agent 3:DifferentialEvolution @ fitness: -29.998428682073932 @ run: 28 @ iteration: 1
+trace @ Agent 0:DifferentialEvolution @ fitness: -29.998434255205364 @ run: 29 @ iteration: 0
+trace @ Agent 0:DifferentialEvolution @ fitness: -29.998906380437823 @ run: 30 @ iteration: 1
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.9998285690867 @ run: 31 @ iteration: 0
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.999939444481225 @ run: 32 @ iteration: 7
+trace @ Agent 3:DifferentialEvolution @ fitness: -29.999946391094888 @ run: 33 @ iteration: 7
+trace @ Agent 3:DifferentialEvolution @ fitness: -29.999985258502466 @ run: 34 @ iteration: 0
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.99999133050686 @ run: 35 @ iteration: 4
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.999991665697237 @ run: 36 @ iteration: 6
+trace @ Agent 8:DifferentialEvolution @ fitness: -29.99999198781707 @ run: 37 @ iteration: 0
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.99999909853149 @ run: 38 @ iteration: 0
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.999999468769204 @ run: 39 @ iteration: 12
+trace @ Agent 6:DifferentialEvolution @ fitness: -29.999999521263156 @ run: 40 @ iteration: 2
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.9999997717238 @ run: 41 @ iteration: 4
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.99999977271843 @ run: 42 @ iteration: 1
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.999999952710702 @ run: 43 @ iteration: 3
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.999999979007708 @ run: 44 @ iteration: 8
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.99999998548195 @ run: 45 @ iteration: 0
+trace @ Agent 5:DifferentialEvolution @ fitness: -29.999999988845428 @ run: 46 @ iteration: 4
+trace @ Agent 3:DifferentialEvolution @ fitness: -29.99999999241739 @ run: 47 @ iteration: 0
+trace @ Agent 4:DifferentialEvolution @ fitness: -29.999999992500257 @ run: 48 @ iteration: 0
+trace @ Agent 5:DifferentialEvolution @ fitness: -29.999999994429686 @ run: 49 @ iteration: 0
+trace @ Agent 4:DifferentialEvolution @ fitness: -29.99999999512465 @ run: 50 @ iteration: 3
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.99999999584374 @ run: 51 @ iteration: 1
+trace @ Agent 1:DifferentialEvolution @ fitness: -29.999999995935404 @ run: 52 @ iteration: 1
+trace @ Agent 4:DifferentialEvolution @ fitness: -29.999999996904815 @ run: 53 @ iteration: 0
+trace @ Agent 4:DifferentialEvolution @ fitness: -29.99999999813231 @ run: 54 @ iteration: 2
+trace @ Agent 4:DifferentialEvolution @ fitness: -29.999999998139106 @ run: 55 @ iteration: 0
+trace @ Agent 9:DifferentialEvolution @ fitness: -29.99999999861261 @ run: 56 @ iteration: 0
+trace @ Agent 3:DifferentialEvolution @ fitness: -29.99999999878196 @ run: 57 @ iteration: 1
+trace @ Agent 8:DifferentialEvolution @ fitness: -29.99999999976853 @ run: 58 @ iteration: 0
+trace @ Agent 9:DifferentialEvolution @ fitness: -29.99999999976875 @ run: 59 @ iteration: 3
