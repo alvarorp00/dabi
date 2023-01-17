@@ -7,9 +7,9 @@ import src.utils as utils
 import src.agents as agents
 
 
-class SynergyBoost:
+class Synergy(Metaheuristic):
     """
-    This class implements the synergy boost metaheuristic.
+    This class implements the synergy metaheuristic.
     It takes a list of metaheuristics (sees them as black boxes) and
     returns the best solution found by any of the metaheuristics.
 

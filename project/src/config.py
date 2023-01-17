@@ -14,7 +14,7 @@ iterations = 100  # number of iterations per run
 convergence_criteria = 1e-12
 
 # Number of dimensions
-dimensions = 4
+dimensions = 2
 
 # Lower bound
 lower_bound = -5.12 * 1e2
