@@ -105,7 +105,7 @@ params = {
     'convergence_criteria': config.convergence_criteria,
 }
 
-synergy_boost = synergy.SynergyBoost(metaheuristics=ms, search=config.search, **params)
+synergy_boost = synergy.Synergy(metaheuristics=ms, search=config.search, **params)
 stats = synergy_boost.optimize()
 print(f'Best agent: {synergy_boost.best_agent} @ Fitness: {synergy_boost.best_agent.fitness} @ Position: {synergy_boost.best_agent.position}')
 

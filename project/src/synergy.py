@@ -54,13 +54,18 @@ class Synergy(Metaheuristic):
         # among all metaheuristics
         if search.mode == utils.EvalMode.MINIMIZE:
             __m_idx = np.argmin(
-                    [m.best_agent.best_fitness for m in self.metaheuristics]
+                    [m.best_agent.fitness for m in self.metaheuristics]
                 )
         else:
             __m_idx = np.argmax(
-                    [m.best_agent.best_fitness for m in self.metaheuristics]
+                    [m.best_agent.fitness for m in self.metaheuristics]
                 )
-        self.best_agent = self.metaheuristics[__m_idx].best_agent
+
+        self.best_agent = agents.Agent(
+            search=self.search,
+            position=self.metaheuristics[__m_idx].best_agent.position,
+            id=-1
+        )
 
         # Update best agent of each metaheuristic
         for m in self.metaheuristics:
@@ -110,6 +115,13 @@ class Synergy(Metaheuristic):
     def convergence_criteria(self, convergence_criteria: float):
         self._parameters['convergence_criteria'] = convergence_criteria
 
+    @property
+    def agents(self) -> List[agents.Agent]:
+        """
+            Collects all agents from all metaheuristics
+        """
+        return [a for m in self.metaheuristics for a in m.agents]
+
     def optimize(self) -> dict[str, any]:
         """
         This method performs the optimization of the metaheuristics
@@ -126,7 +138,7 @@ class Synergy(Metaheuristic):
             stats['runs'] += 1
             # Extract the best agent before the optimization
             # and check if it has improved after the optimization
-            best_agent_before = self.best_agent
+            best_fitness_before = self.best_agent.fitness
             for m in self.metaheuristics:
                 for iteration in range(self.iterations):
                     # Check if the metaheuristic has improved its best agent
@@ -136,7 +148,8 @@ class Synergy(Metaheuristic):
                             m.best_agent.fitness,
                             self.search.mode
                         ):
-                            self.best_agent = m.best_agent
+                            self.best_agent.position = m.best_agent.position
+                            self.best_agent.fitness = m.best_agent.fitness
                             # Add to trace the best fitness found
                             stats['trace'].add(
                                 self.best_agent,
@@ -149,7 +162,7 @@ class Synergy(Metaheuristic):
             # Check if the best agent has converged
             if utils.converged(
                 self.best_agent.fitness,
-                best_agent_before.fitness,
+                best_fitness_before,
                 self.convergence_criteria
             ):
                 stats['converged'] = 'True'

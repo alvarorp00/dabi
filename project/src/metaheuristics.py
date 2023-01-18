@@ -93,6 +93,7 @@ class Metaheuristic(ABC):
             instead.
         """
         self._parameters['best_agent'] = best_agent
+
     @property
     def name(self):
         if 'name' in self._parameters:
@@ -498,6 +499,8 @@ class WaterCycleAlgorithm(Metaheuristic):
                         the number of rivers + 1 (sea)
                 - d_max: float, maximum distance between sea
                             and rivers before evaporation occurs
+                - max_iters: int, maximum number of iterations,
+                            required to calculate d_max_{i+1}
 
         References:
             - https://arxiv.org/pdf/1909.08800.pdf
@@ -530,8 +533,11 @@ class WaterCycleAlgorithm(Metaheuristic):
                 "Algorithm"
             )
 
-        if 'd_max_decay' not in kwargs:
-            logging.critical("Missing parameter 'd_max_decay' for Water Cycle ")
+        if 'max_iters' not in kwargs:
+            logging.critical(
+                "Missing parameter 'max_iters' (maximum number of "
+                "iterations) for Water Cycle Algorithm"
+            )
 
         if 'c_constant' not in kwargs:
             logging.info("Using random value for 'c_constant' parameter [>1,"
@@ -679,14 +685,6 @@ class WaterCycleAlgorithm(Metaheuristic):
         self._parameters['d_max'] = d_max
 
     @property
-    def d_max_decay(self) -> float:
-        """
-            Get the maximum distance between sea and rivers before evaporation
-            occurs
-        """
-        return self._parameters.get('d_max_decay', None)
-
-    @property
     def c_constant(self) -> float:
         """
             Get the constant c for the distance formula
@@ -817,7 +815,7 @@ class WaterCycleAlgorithm(Metaheuristic):
                     self.sea.fitness = best_stream.fitness
 
         # Reduce the d_max parameter
-        self.d_max = self.d_max - self.d_max_decay
+        self.d_max = self.d_max - (self.d_max / self._parameters['max_iters'])
 
     def update_parameters(self, **kwargs):
         # Update parameters of the metaheuristic

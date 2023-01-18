@@ -14,13 +14,13 @@ iterations = 100  # number of iterations per run
 convergence_criteria = 1e-12
 
 # Number of dimensions
-dimensions = 2
+dimensions = 10
 
 # Lower bound
-lower_bound = -5.12 * 1e2
+lower_bound = -5.12
 
 # Upper bound
-upper_bound = +5.12 * 1e2
+upper_bound = +5.12
 
 # Target function
 target_function = rastrigin

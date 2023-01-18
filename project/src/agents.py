@@ -146,8 +146,8 @@ class Agent():
     def __str__(self):
         return f"Agent {self.id}"
 
-    def __repr__(self) -> str:
-        return f"Agent {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."  # noqa: E501
+    # def __repr__(self) -> str:
+    #     return f"Agent {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."  # noqa: E501
 
     def __eq__(self, other) -> bool:
         return self.id == other.id
@@ -180,8 +180,8 @@ class Bee(Agent):
     def __str__(self):
         return f"Bee {self.id}"
 
-    def __repr__(self) -> str:
-        return f"Bee {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."
+    # def __repr__(self) -> str:
+    #     return f"Bee {self.id} at {self.position} with fitness {self.fitness}."
 
     def __eq__(self, other) -> bool:
         return super().__eq__(other)
@@ -250,8 +250,8 @@ class Particle(Agent):
     def __str__(self):
         return f"Particle {self.id}"
 
-    def __repr__(self) -> str:
-        return f"Particle {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."  # noqa: E501
+    # def __repr__(self) -> str:
+    #     return f"Particle {self.id} at {self.position} with fitness {self.fitness} and best position {self.best_position} with fitness {self.best_fitness}."  # noqa: E501
 
     def __eq__(self, other) -> bool:
         return super().__eq__(other)
@@ -289,9 +289,9 @@ class River(Agent):
     def __str__(self):
         return f"River {self.id}"
 
-    def __repr__(self) -> str:
-        return f"River {self.id} at {self.position} "\
-               f"with fitness {self.fitness}. \n"
+    # def __repr__(self) -> str:
+    #     return f"River {self.id} at {self.position} "\
+    #            f"with fitness {self.fitness}. \n"
 
     def __eq__(self, other) -> bool:
         return super().__eq__(other)
